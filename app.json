@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Lifemaxxing",
+    "slug": "lifemaxxing",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "lifemaxxing",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-router",
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
