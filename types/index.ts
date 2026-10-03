@@ -5,12 +5,16 @@ export interface Profile {
   id: string;
   username: string;
   avatar_url: string | null;
+  current_streak: number;
+  preferences: Preferences;
+}
+
+export interface Preferences {
   interests: string[];
   radius_km: number;
   min_price: number;
   max_price: number;
   group_mode: GroupMode;
-  current_streak: number;
 }
 
 export interface Event {
