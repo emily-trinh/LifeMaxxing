@@ -1,6 +1,21 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { colors, spacing } from '../constants/theme';
-import type { WeeklyPrompt } from '../types';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { colors, fonts, radius, spacing } from '../constants/theme';
 
-export function PromptCard({ prompt }: { prompt: WeeklyPrompt }) { return <View style={styles.card}><Text style={styles.eyebrow}>{prompt.category} · Weekly prompt</Text><Text style={styles.title}>{prompt.title}</Text><Text style={styles.description}>{prompt.description}</Text></View>; }
-const styles = StyleSheet.create({ card: { backgroundColor: colors.primaryDark, borderRadius: 14, padding: spacing.lg }, eyebrow: { color: colors.accent, fontWeight: '700', fontSize: 12, textTransform: 'uppercase' }, title: { color: colors.surface, fontSize: 24, fontWeight: '800', marginTop: spacing.sm }, description: { color: '#D8E9DF', fontSize: 16, lineHeight: 23, marginTop: spacing.sm } });
+type PromptCardProps = { label?: string; title: string; description?: string; onPress?: () => void };
+
+export function PromptCard({ label = "THIS WEEK'S PROMPT", title, description, onPress }: PromptCardProps) {
+	return (
+		<Pressable onPress={onPress} disabled={!onPress} style={styles.card}>
+			<Text style={styles.label}>{label}</Text>
+			<Text style={styles.title}>{title}</Text>
+			{description ? <Text style={styles.description}>{description}</Text> : null}
+		</Pressable>
+	);
+}
+
+const styles = StyleSheet.create({
+	card: { alignSelf: 'stretch', backgroundColor: colors.card, borderRadius: radius.md, padding: spacing.md },
+	label: { color: colors.muted, fontFamily: fonts.sansMedium, fontSize: 11, letterSpacing: 0.6 },
+	title: { color: colors.text, fontFamily: fonts.sansMedium, fontSize: 23, lineHeight: 30, marginTop: spacing.sm },
+	description: { color: colors.muted, fontFamily: fonts.sans, fontSize: 14, lineHeight: 21, marginTop: spacing.sm },
+});

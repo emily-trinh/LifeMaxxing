@@ -29,3 +29,8 @@ export const mockPosts: Post[] = [
   { id: 'post-2', user_id: 'user-3', event_id: 'event-2', media_url: image('photo-1577083552431-6e5fd01aa342'), media_type: 'image', caption: 'My first slightly wonky mug.', created_at: '2026-10-01T21:05:00Z' },
   { id: 'post-3', user_id: 'user-4', event_id: 'event-5', media_url: image('photo-1549490349-8643362247b5'), media_type: 'image', caption: 'The solo museum route delivered.', created_at: '2026-09-29T13:40:00Z' },
 ];
+
+export const getProfile = (id: string) => mockProfiles.find((profile) => profile.id === id);
+export const getEvent = (id: string) => mockEvents.find((event) => event.id === id);
+export const currentUserId = 'user-1';
+export const currentUser = mockProfiles.find((profile) => profile.id === currentUserId)!;

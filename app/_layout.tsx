@@ -1,7 +1,25 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { colors } from '../constants/theme';
+import { useFonts, Fraunces_600SemiBold, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
+import { DMSans_400Regular, DMSans_500Medium, DMSans_700Bold } from '@expo-google-fonts/dm-sans';
 
 export default function RootLayout() {
-  return <><StatusBar style="dark" /><Stack screenOptions={{ headerTintColor: colors.primaryDark, headerTitleStyle: { fontWeight: '700' } }}><Stack.Screen name="(tabs)" options={{ headerShown: false }} /><Stack.Screen name="(auth)/login" options={{ title: 'Log in' }} /><Stack.Screen name="event/[id]" options={{ title: 'Event details' }} /><Stack.Screen name="settings" options={{ title: 'Settings' }} /></Stack></>;
+  const [loaded] = useFonts({
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_700Bold,
+  });
+
+  if (!loaded) return null;
+
+  return (
+    <>
+      <StatusBar style="dark" />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="post/create" options={{ presentation: 'modal' }} />
+      </Stack>
+    </>
+  );
 }

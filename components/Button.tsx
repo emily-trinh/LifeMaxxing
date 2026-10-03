@@ -1,19 +1,28 @@
-import type { PropsWithChildren } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
-import { colors, spacing } from '../constants/theme';
+import { Pressable, Text } from 'react-native';
+import { colors, fonts, radius } from '../constants/theme';
 
-interface ButtonProps extends PropsWithChildren {
-  onPress: () => void;
-  variant?: 'primary' | 'secondary';
+type ButtonProps = { label: string; onPress?: () => void; variant?: 'solid' | 'outline' };
+
+export function Button({ label, onPress, variant = 'solid' }: ButtonProps) {
+  const solid = variant === 'solid';
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        backgroundColor: solid ? colors.ink : 'transparent',
+        borderWidth: solid ? 0 : 1.5,
+        borderColor: colors.ink,
+        borderRadius: radius.md,
+        paddingVertical: 12,
+        paddingHorizontal: 22,
+        alignItems: 'center',
+        opacity: pressed ? 0.8 : 1,
+      })}>
+      <Text style={{ color: solid ? colors.card : colors.ink, fontFamily: fonts.sansBold, fontSize: 16 }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
 }
 
-export function Button({ children, onPress, variant = 'primary' }: ButtonProps) {
-  return <Pressable onPress={onPress} style={[styles.button, variant === 'secondary' && styles.secondary]}><Text style={[styles.label, variant === 'secondary' && styles.secondaryLabel]}>{children}</Text></Pressable>;
-}
-
-const styles = StyleSheet.create({
-  button: { backgroundColor: colors.primary, borderRadius: 10, padding: spacing.md, alignItems: 'center' },
-  secondary: { backgroundColor: colors.surface, borderColor: colors.primary, borderWidth: 1 },
-  label: { color: colors.surface, fontWeight: '700' },
-  secondaryLabel: { color: colors.primary },
-});
+export default Button;
