@@ -2,7 +2,10 @@ export type RecommendationGroupMode = 'solo' | 'group' | 'either';
 
 export interface UserPreferences {
   interests: string[];
+  likes: string[];
+  dislikes: string[];
   radiusKm: number;
+  minPrice: number;
   maxPrice: number;
   groupMode: RecommendationGroupMode;
 }

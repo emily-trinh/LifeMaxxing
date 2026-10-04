@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test:recommendation": "tsx scripts/test-recommendation.ts",
+    "test:weekly-activity": "tsx scripts/test-weekly-activity.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
