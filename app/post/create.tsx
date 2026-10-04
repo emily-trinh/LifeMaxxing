@@ -33,6 +33,7 @@ export default function CreatePostScreen() {
   const { profile } = useProfile();
   const { width } = useWindowDimensions();
   const [mediaUri, setMediaUri] = useState<string | null>(null);
+  const [mediaBase64, setMediaBase64] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [sharing, setSharing] = useState(false);
   const event = getEvent(eventId);
@@ -45,11 +46,15 @@ export default function CreatePostScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
+      base64: true,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
-    if (!result.canceled && result.assets[0]) setMediaUri(result.assets[0].uri);
+    if (!result.canceled && result.assets[0]) {
+      setMediaUri(result.assets[0].uri);
+      setMediaBase64(result.assets[0].base64 ?? null);
+    }
   }
 
   async function takePhoto() {
@@ -60,11 +65,15 @@ export default function CreatePostScreen() {
     }
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
+      base64: true,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
-    if (!result.canceled && result.assets[0]) setMediaUri(result.assets[0].uri);
+    if (!result.canceled && result.assets[0]) {
+      setMediaUri(result.assets[0].uri);
+      setMediaBase64(result.assets[0].base64 ?? null);
+    }
   }
 
   async function sharePost() {
@@ -75,11 +84,15 @@ export default function CreatePostScreen() {
         userId: profile.id,
         eventId: eventId ?? '',
         mediaUri,
+        mediaBase64,
         caption: caption.trim(),
       });
       router.replace('/(tabs)');
-    } catch {
-      Alert.alert("Couldn't share your post. Try again.");
+    } catch (error) {
+      Alert.alert(
+        "Couldn't share your post",
+        error instanceof Error ? error.message : 'Please try again.'
+      );
     } finally {
       setSharing(false);
     }

@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PostCard } from '../../components/PostCard';
@@ -12,11 +12,24 @@ export default function PostFeedScreen() {
   const params = useLocalSearchParams<{ userId: string; postId: string }>();
   const userId = Array.isArray(params.userId) ? params.userId[0] ?? '' : params.userId ?? '';
   const postId = Array.isArray(params.postId) ? params.postId[0] ?? '' : params.postId ?? '';
-  const posts = useMemo(() => getPostsByUser(userId), [userId]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const scrollViewRef = useRef<ScrollView>(null);
   const yPositions = useRef<Record<string, number>>({});
   const hasScrolled = useRef(false);
-  const [ready, setReady] = useState(posts.length === 0);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    setReady(false);
+    void getPostsByUser(userId)
+      .then((loadedPosts) => {
+        if (mounted) setPosts(loadedPosts);
+      })
+      .catch((error: unknown) => console.error(error));
+    return () => {
+      mounted = false;
+    };
+  }, [userId]);
 
   useEffect(() => {
     const fallback = setTimeout(() => {
