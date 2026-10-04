@@ -34,3 +34,17 @@ export const getProfile = (id: string) => mockProfiles.find((profile) => profile
 export const getEvent = (id: string) => mockEvents.find((event) => event.id === id);
 export const currentUserId = 'user-1';
 export const currentUser = mockProfiles.find((profile) => profile.id === currentUserId)!;
+
+// The backend will replace these mock profile posts and friend relationships later.
+export const mockUserPosts: Post[] = [
+  { id: 'user-post-1', user_id: 'user-1', event_id: 'event-1', media_url: image('photo-1500534623283-312aade485b7'), media_type: 'image', caption: 'Early start, excellent payoff.', created_at: '2026-09-08T08:15:00Z' },
+  { id: 'user-post-2', user_id: 'user-1', event_id: 'event-3', media_url: image('photo-1577083552431-6e5fd01aa342'), media_type: 'image', caption: 'Took the scenic route.', created_at: '2026-09-14T15:40:00Z' },
+  { id: 'user-post-3', user_id: 'user-1', event_id: 'event-5', media_url: image('photo-1549490349-8643362247b5'), media_type: 'image', caption: 'A quiet hour well spent.', created_at: '2026-09-21T11:05:00Z' },
+  { id: 'user-post-4', user_id: 'user-1', event_id: 'event-6', media_url: image('photo-1551632811-561732d1e306'), media_type: 'image', caption: 'Dirt under the nails kind of day.', created_at: '2026-09-27T12:30:00Z' },
+  { id: 'user-post-5', user_id: 'user-1', event_id: 'event-8', media_url: image('photo-1565193566173-7a0ee3dbe261'), media_type: 'image', caption: 'Found a new rhythm.', created_at: '2026-10-01T09:20:00Z' },
+  { id: 'user-post-6', user_id: 'user-1', event_id: 'event-10', media_url: image('photo-1452587925148-ce544e77e70d'), media_type: 'image', caption: 'A little color for the week.', created_at: '2026-10-03T17:10:00Z' },
+];
+
+export const mockFriendIds = ['user-2', 'user-3', 'user-4'];
+export const getPostsByUser = (userId: string) => [...mockPosts, ...mockUserPosts].filter((post) => post.user_id === userId);
+export const getFriends = () => mockProfiles.filter((profile) => mockFriendIds.includes(profile.id));

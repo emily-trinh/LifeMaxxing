@@ -75,8 +75,12 @@ export default function PromptScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.missionText}>
+        <View style={styles.headingBlock}>
           <Text style={styles.screenTitle}>Your mission</Text>
+          <Text style={styles.subtitle}>something new to try this week</Text>
+        </View>
+        <View style={styles.missionDivider} />
+        <View style={styles.missionText}>
           <Text style={styles.eventTitle}>{event.title}</Text>
           <Text style={styles.eventDescription}>{event.description}</Text>
         </View>
@@ -136,9 +140,12 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { paddingBottom: spacing.xl },
   textSection: { paddingHorizontal: spacing.md },
-  missionText: { paddingHorizontal: spacing.md, marginBottom: spacing.md },
+  headingBlock: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
   screenTitle: { ...type.title },
-  eventTitle: { color: colors.ink, fontFamily: fonts.bold, fontSize: 26, lineHeight: 32, letterSpacing: -0.3, marginTop: spacing.sm },
+  subtitle: { ...type.label, color: colors.muted, marginTop: spacing.xs },
+  missionDivider: { height: 1, backgroundColor: colors.border, marginHorizontal: spacing.md, marginTop: spacing.xl, marginBottom: spacing.lg },
+  missionText: { paddingHorizontal: spacing.md, marginBottom: spacing.md },
+  eventTitle: { color: colors.ink, fontFamily: fonts.bold, fontSize: 26, lineHeight: 32, letterSpacing: -0.3 },
   eventDescription: { ...type.body, color: colors.muted, marginTop: spacing.sm },
   image: { borderRadius: radius.sm, backgroundColor: colors.surface },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },

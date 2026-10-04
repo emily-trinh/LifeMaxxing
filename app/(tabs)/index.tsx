@@ -1,22 +1,27 @@
 import { router } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PostCard } from '../../components/PostCard';
 import { PromptCard } from '../../components/PromptCard';
 import { colors, fonts, radius, spacing, type } from '../../constants/theme';
-import { currentUser, mockPosts } from '../../lib/mockData';
+import { useProfile } from '../../lib/ProfileContext';
 import { useMission } from '../../lib/MissionContext';
+import { getAllPosts } from '../../services/postService';
+import type { Post } from '../../types';
 
 function FeedHeader() {
 	const { activeEvent } = useMission();
+	const { profile } = useProfile();
 
 	return (
 		<View style={styles.header}>
 			<View style={styles.titleRow}>
 				<Text style={styles.title}>Lifemaxxing</Text>
-				<Pressable accessibilityRole="button" accessibilityLabel={`${currentUser.current_streak} week streak`} onPress={() => router.push('/profile')} style={styles.streakPill}>
+				<Pressable accessibilityRole="button" accessibilityLabel={`${profile.current_streak} week streak`} onPress={() => router.push('/profile')} style={styles.streakPill}>
 					<Text style={styles.flame}>{'\uD83D\uDD25'}</Text>
-					<Text style={styles.streakNumber}>{currentUser.current_streak}</Text>
+					<Text style={styles.streakNumber}>{profile.current_streak}</Text>
 				</Pressable>
 			</View>
 			<PromptCard
@@ -29,10 +34,15 @@ function FeedHeader() {
 }
 
 export default function HomeScreen() {
+	const [posts, setPosts] = useState<Post[]>([]);
+	useFocusEffect(useCallback(() => {
+		setPosts(getAllPosts());
+	}, []));
+
 	return (
 		<SafeAreaView style={styles.screen} edges={['top']}>
 			<FlatList
-				data={mockPosts}
+				data={posts}
 				keyExtractor={(post) => post.id}
 				renderItem={({ item }) => <PostCard post={item} />}
 				ListHeaderComponent={FeedHeader}

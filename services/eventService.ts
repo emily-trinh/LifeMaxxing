@@ -1,3 +1,6 @@
+import { mockEvents } from '../lib/mockData';
+import type { Event } from '../types';
+
 export type AttendanceStatus = 'none' | 'going' | 'booked';
 
 const goingEventIds = new Set<string>();
@@ -18,4 +21,17 @@ export async function bookEvent(eventId: string): Promise<void> {
 export async function getAttendanceStatus(eventId: string): Promise<AttendanceStatus> {
   if (bookedEventIds.has(eventId)) return 'booked';
   return goingEventIds.has(eventId) ? 'going' : 'none';
+}
+
+export async function getMyActivities(): Promise<{ event: Event; status: 'going' | 'booked' }[]> {
+  return mockEvents
+    .flatMap((event) => {
+      const status: AttendanceStatus = bookedEventIds.has(event.id)
+        ? 'booked'
+        : goingEventIds.has(event.id)
+          ? 'going'
+          : 'none';
+      return status === 'none' ? [] : [{ event, status }];
+    })
+    .sort((first, second) => new Date(first.event.start_time).getTime() - new Date(second.event.start_time).getTime());
 }

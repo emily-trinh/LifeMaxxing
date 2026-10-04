@@ -10,6 +10,27 @@ export const categoryEmoji: Record<string, string> = {
   Food: '🍝',
 };
 
+// Real device location will replace this reference point later.
+export const REFERENCE_POINT = { latitude: 37.7749, longitude: -122.4194 };
+
+export function distanceKm(latitude: number, longitude: number): number {
+  const earthRadiusKm = 6371;
+  const toRadians = (degrees: number) => degrees * (Math.PI / 180);
+  const latitudeDelta = toRadians(latitude - REFERENCE_POINT.latitude);
+  const longitudeDelta = toRadians(longitude - REFERENCE_POINT.longitude);
+  const startLatitude = toRadians(REFERENCE_POINT.latitude);
+  const endLatitude = toRadians(latitude);
+  const haversine = Math.sin(latitudeDelta / 2) ** 2
+    + Math.cos(startLatitude) * Math.cos(endLatitude) * Math.sin(longitudeDelta / 2) ** 2;
+
+  return 2 * earthRadiusKm * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+export function formatDistance(km: number): string {
+  const distance = km < 10 ? km.toFixed(1) : Math.round(km).toString();
+  return `${distance} km away`;
+}
+
 export function formatEventDate(iso: string): string {
   const date = new Date(iso);
   const dayAndDate = new Intl.DateTimeFormat('en-US', {

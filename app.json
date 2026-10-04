@@ -9,7 +9,14 @@
     "plugins": [
       "expo-router",
       "expo-status-bar",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Lifemaxxing to access your photos so you can share your activities",
+          "cameraPermission": "Allow Lifemaxxing to use your camera so you can share your activities"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

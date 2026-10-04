@@ -1,13 +1,6 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../constants/theme';
-
-const tabSymbols: Record<string, string> = {
-  index: '\u2302',
-  prompt: '\u2668',
-  explore: '\u25ce',
-  profile: '\u25cb',
-};
 
 export default function TabsLayout() {
   return (
@@ -18,12 +11,18 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: { backgroundColor: colors.bg, borderTopColor: colors.border, borderTopWidth: 1, elevation: 0 },
         tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: 11 },
-        tabBarIcon: ({ color, size }) => (
-          <Text style={{ color, fontSize: size, lineHeight: size }}>{tabSymbols[route.name]}</Text>
-        ),
+        tabBarIcon: ({ color, size, focused }) => {
+          const icons = {
+            index: focused ? 'home' : 'home-outline',
+            prompt: focused ? 'sparkles' : 'sparkles-outline',
+            explore: focused ? 'compass' : 'compass-outline',
+            profile: focused ? 'person' : 'person-outline',
+          } as const;
+          return <Ionicons name={icons[route.name as keyof typeof icons]} color={color} size={size} />;
+        },
       })}>
       <Tabs.Screen name="index" options={{ title: 'Home' }} />
-      <Tabs.Screen name="prompt" options={{ title: 'Prompt' }} />
+      <Tabs.Screen name="prompt" options={{ title: 'Activity' }} />
       <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
     </Tabs>
