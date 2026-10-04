@@ -63,6 +63,52 @@ function isRecommendation(value: unknown): value is EventRecommendation {
     && result.reason.length > 0;
 }
 
+function isEligibleEvent(event: CandidateEvent, preferences: UserPreferences) {
+  return event.distanceKm <= preferences.radiusKm
+    && event.price >= preferences.minPrice
+    && event.price <= preferences.maxPrice
+    && (preferences.groupMode === 'either' || !event.groupMode || event.groupMode === preferences.groupMode)
+    && !preferences.dislikes.some((dislike) => (
+      event.title.toLowerCase().includes(dislike.toLowerCase())
+      || event.description?.toLowerCase().includes(dislike.toLowerCase())
+      || event.category.toLowerCase().includes(dislike.toLowerCase())
+    ));
+}
+
+function preferenceScore(event: CandidateEvent, preferences: UserPreferences): number {
+  const interests = [...preferences.interests, ...preferences.likes].map((item) => item.toLowerCase());
+  return interests.reduce((score, interest) => (
+    score
+      + (event.title.toLowerCase().includes(interest) ? 3 : 0)
+      + (event.category.toLowerCase().includes(interest) ? 2 : 0)
+      + (event.description?.toLowerCase().includes(interest) ? 1 : 0)
+  ), 0);
+}
+
+function fallbackRecommendation(preferences: UserPreferences, events: CandidateEvent[]): EventRecommendation {
+  const eligibleEvents = events.filter((event) => isEligibleEvent(event, preferences));
+  if (eligibleEvents.length === 0) return { eventId: null, reason: noMatchReason };
+
+  const bestEvent = eligibleEvents
+    .map((event) => ({
+      event,
+      score: preferenceScore(event, preferences),
+    }))
+    .sort((first, second) => second.score - first.score)[0].event;
+
+  if (preferenceScore(bestEvent, preferences) === 0) {
+    return {
+      eventId: bestEvent.id,
+      reason: `There isn't an event matching your preferences this week, but you may like ${bestEvent.title}.`,
+    };
+  }
+
+  return {
+    eventId: bestEvent.id,
+    reason: `This ${bestEvent.category.toLowerCase()} activity fits your preferences and is within your selected range.`,
+  };
+}
+
 function buildPrompt(preferences: UserPreferences, events: CandidateEvent[]) {
   return [
     'Select the single best available event to become this user\'s personalized weekly activity.',
@@ -122,7 +168,16 @@ async function handleRequest(request: Request) {
 
     if (!isRecommendation(parsed)) return jsonResponse({ error: 'Gemini returned an invalid weekly activity.' }, 502);
     if (parsed.eventId !== null && !eventIds.includes(parsed.eventId)) return jsonResponse({ error: 'Gemini selected an event outside the supplied candidates.' }, 502);
-    return jsonResponse(parsed.eventId === null ? { eventId: null, reason: noMatchReason } : parsed);
+    if (parsed.eventId === null) return jsonResponse(fallbackRecommendation(input.preferences, events));
+
+    const selectedEvent = events.find((event) => event.id === parsed.eventId);
+    if (selectedEvent && preferenceScore(selectedEvent, input.preferences) === 0) {
+      return jsonResponse({
+        eventId: selectedEvent.id,
+        reason: `There isn't an event matching your preferences this week, but you may like ${selectedEvent.title}.`,
+      });
+    }
+    return jsonResponse(parsed);
   } catch (error) {
     console.error('Gemini weekly activity generation failed:', error);
     return jsonResponse({ error: 'Gemini weekly activity request failed.' }, 502);

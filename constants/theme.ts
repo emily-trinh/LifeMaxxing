@@ -8,6 +8,8 @@ export const colors = {
   accent: '#FF5A36',
   accentSoft: '#FFE6DF',
   prompt: '#FFF4B8',
+  success: '#DDF5E5',
+  successInk: '#176B3A',
   danger: '#D92D20',
 };
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };

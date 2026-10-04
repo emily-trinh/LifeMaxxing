@@ -6,6 +6,7 @@ type ProfileRow = {
   username: string | null;
   avatar_url: string | null;
   current_streak: number | null;
+  last_completed_week: string | null;
 };
 
 type PreferencesRow = {
@@ -32,7 +33,7 @@ export async function getFriends(userId: string): Promise<Profile[]> {
 
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url, current_streak')
+    .select('id, username, avatar_url, current_streak, last_completed_week')
     .in('id', friendIds);
 
   if (profilesError) {
@@ -44,6 +45,7 @@ export async function getFriends(userId: string): Promise<Profile[]> {
     username: friend.username ?? 'User',
     avatar_url: friend.avatar_url,
     current_streak: friend.current_streak ?? 0,
+    last_completed_week: friend.last_completed_week,
     preferences: {
       interests: [],
       radius_km: 10,
@@ -62,7 +64,7 @@ export async function getProfile(): Promise<Profile> {
   const [{ data: profile, error: profileError }, { data: preferences, error: preferencesError }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, username, avatar_url, current_streak')
+      .select('id, username, avatar_url, current_streak, last_completed_week')
       .eq('id', userData.user.id)
       .single<ProfileRow>(),
     supabase
@@ -81,6 +83,7 @@ export async function getProfile(): Promise<Profile> {
     username: profile.username ?? userData.user.email?.split('@')[0] ?? 'User',
     avatar_url: profile.avatar_url,
     current_streak: profile.current_streak ?? 0,
+    last_completed_week: profile.last_completed_week,
     preferences: {
       interests: preferences?.interests ?? [],
       radius_km: preferences?.radius_km ?? 10,
@@ -98,8 +101,14 @@ export async function updateProfile(updates: Partial<Profile>): Promise<Profile>
 
   const { preferences, ...profileUpdates } = updates;
   if (Object.keys(profileUpdates).length > 0) {
-    const { error } = await supabase.from('profiles').update(profileUpdates).eq('id', userData.user.id);
+    const { data: updatedProfile, error } = await supabase
+      .from('profiles')
+      .update(profileUpdates)
+      .eq('id', userData.user.id)
+      .select('id')
+      .single();
     if (error) throw new Error(`Unable to update your profile: ${error.message}`);
+    if (!updatedProfile) throw new Error('Unable to update your profile: no profile row was changed.');
   }
 
   if (preferences) {

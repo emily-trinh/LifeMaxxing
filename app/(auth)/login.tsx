@@ -22,7 +22,7 @@ export default function LoginScreen() {
             Alert.alert(
                 'Sign in failed',
                 invalidCredentials
-                    ? 'The email or password is incorrect. If you created this account before email confirmation was disabled, create a new account or reset the password in Supabase.'
+                    ? 'The email or password is incorrect.'
                     : message
             );
         } finally {

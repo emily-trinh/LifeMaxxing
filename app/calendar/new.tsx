@@ -1,4 +1,4 @@
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
@@ -129,11 +129,8 @@ export default function NewCalendarEntryScreen() {
     return () => { active = false; };
   }, [id]);
 
-  function handlePickerChange(event: DateTimePickerEvent, pickedDate?: Date) {
-    if (event.type === 'dismissed' || !pickedDate || !activePicker) {
-      if (Platform.OS === 'android') setActivePicker(null);
-      return;
-    }
+  function handlePickerChange(_event: unknown, pickedDate: Date) {
+    if (!activePicker) return;
 
     if (activePicker === 'date') {
       const nextStart = combineDateAndTime(pickedDate, startsAt);
@@ -149,6 +146,10 @@ export default function NewCalendarEntryScreen() {
       setEndsAt(combineDateAndTime(endsAt, pickedDate));
     }
 
+    if (Platform.OS === 'android') setActivePicker(null);
+  }
+
+  function dismissPicker() {
     if (Platform.OS === 'android') setActivePicker(null);
   }
 
@@ -211,7 +212,8 @@ export default function NewCalendarEntryScreen() {
           mode={mode}
           display={Platform.OS === 'ios' ? 'compact' : 'default'}
           accentColor={colors.ink}
-          onChange={handlePickerChange}
+          onValueChange={handlePickerChange}
+          onDismiss={dismissPicker}
         />
       </View>
     );
