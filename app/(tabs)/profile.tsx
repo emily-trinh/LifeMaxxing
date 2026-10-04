@@ -15,6 +15,7 @@ import { getPostsByUser } from '../../services/postService';
 import type { Event, Post } from '../../types';
 
 type ProfileTab = 'posts' | 'activities' | 'friends';
+const GRID_GAP = 1;
 
 export default function ProfileScreen() {
 	const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
@@ -23,7 +24,11 @@ export default function ProfileScreen() {
 	const [userPosts, setUserPosts] = useState<Post[]>([]);
 	const [activities, setActivities] = useState<{ event: Event; status: 'going' | 'booked' }[]>([]);
 	const friends = getFriends();
-	const thumbnailSize = (width - 2) / 3;
+	const thumbnailSize = Math.floor((width - GRID_GAP * 2) / 3);
+	const postRows: Post[][] = [];
+	for (let index = 0; index < userPosts.length; index += 3) {
+		postRows.push(userPosts.slice(index, index + 3));
+	}
 	const interests = profile.preferences.interests.map((interest) => `${interest.charAt(0).toUpperCase()}${interest.slice(1)}`);
 	const groupPreference = profile.preferences.group_mode === 'solo'
 		? 'Solo only'
@@ -83,13 +88,24 @@ export default function ProfileScreen() {
 				{activeTab === 'posts' ? (
 					userPosts.length ? (
 						<View style={styles.postGrid}>
-							{userPosts.map((post) => (
-								<Pressable key={post.id} onPress={() => router.push({ pathname: '/post/feed', params: { userId: profile.id, postId: post.id } })} style={[styles.thumbnail, { width: thumbnailSize, height: thumbnailSize }]}>
-									<Image source={{ uri: post.media_url }} style={styles.thumbnailImage} resizeMode="cover" />
-									{post.media_type === 'video' ? (
-										<Ionicons name="play" size={16} color={colors.bg} style={styles.playIcon} />
-									) : null}
-								</Pressable>
+							{postRows.map((row, rowIndex) => (
+								<View key={`post-row-${rowIndex}`} style={styles.postRow}>
+									{row.map((post, index) => (
+										<Pressable
+											key={post.id}
+											onPress={() => router.push({ pathname: '/post/feed', params: { userId: profile.id, postId: post.id } })}
+											style={[styles.thumbnail, { width: thumbnailSize, height: thumbnailSize, marginRight: index < 2 ? GRID_GAP : 0 }]}>
+											<Image source={{ uri: post.media_url }} style={{ width: thumbnailSize, height: thumbnailSize }} resizeMode="cover" />
+											{post.media_type === 'video' ? (
+												<Ionicons name="play" size={16} color={colors.bg} style={styles.playIcon} />
+											) : null}
+										</Pressable>
+									))}
+									{Array.from({ length: 3 - row.length }, (_, index) => {
+										const slotIndex = row.length + index;
+										return <View key={`empty-${slotIndex}`} style={[styles.emptyThumbnail, { width: thumbnailSize, height: thumbnailSize, marginRight: slotIndex < 2 ? GRID_GAP : 0 }]} />;
+									})}
+								</View>
 							))}
 						</View>
 					) : (
@@ -174,9 +190,10 @@ const styles = StyleSheet.create({
 	tabText: { fontFamily: fonts.medium, fontSize: 15 },
 	activeTabText: { color: colors.ink },
 	inactiveTabText: { color: colors.muted },
-	postGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 1 },
+	postGrid: {},
+	postRow: { flexDirection: 'row', marginBottom: GRID_GAP },
 	thumbnail: { position: 'relative' },
-	thumbnailImage: { width: '100%', height: '100%' },
+	emptyThumbnail: {},
 	playIcon: { position: 'absolute', top: spacing.sm, right: spacing.sm },
 	empty: { ...type.body, color: colors.muted, textAlign: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.xl },
 	friendRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
