@@ -5,6 +5,8 @@ import { useState } from 'react';
 import {
   Alert,
   Image,
+  InputAccessoryView,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -12,6 +14,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
   useWindowDimensions,
 } from 'react-native';
@@ -22,6 +25,8 @@ import { categoryEmoji } from '../../lib/format';
 import { getEvent } from '../../lib/mockData';
 import { useProfile } from '../../lib/ProfileContext';
 import { createPost } from '../../services/postService';
+
+const accessoryId = 'doneAccessory';
 
 export default function CreatePostScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -82,60 +87,79 @@ export default function CreatePostScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.headerSide} accessibilityRole="button" accessibilityLabel="Close">
-          <Ionicons name="close" size={26} color={colors.text} />
-        </Pressable>
-        <Text style={styles.headerTitle}>New post</Text>
-        <Pressable onPress={sharePost} disabled={!mediaUri || sharing} style={styles.shareButton} accessibilityRole="button">
-          <Text style={[styles.shareText, mediaUri && !sharing ? styles.shareEnabled : styles.shareDisabled]}>{sharing ? 'Sharing…' : 'Share'}</Text>
-        </Pressable>
-      </View>
-      <View style={styles.divider} />
-      <KeyboardAvoidingView style={styles.keyboardArea} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {event ? (
-            <Text style={styles.eventLine} numberOfLines={1}>
-              {categoryEmoji[event.category] ? `${categoryEmoji[event.category]} ` : ''}{event.title}
-            </Text>
-          ) : null}
-          <Pressable onPress={choosePhoto} style={[styles.photoArea, { width, height: width }]}>
-            {mediaUri ? (
-              <Image source={{ uri: mediaUri }} style={styles.photo} resizeMode="cover" />
-            ) : (
-              <View style={styles.emptyPhoto}>
-                <Ionicons name="image-outline" size={48} color={colors.muted} />
-                <Text style={styles.emptyPhotoText}>Add a photo of your activity</Text>
-              </View>
-            )}
-          </Pressable>
-          <View style={styles.pickerButtons}>
-            <View style={styles.buttonColumn}>
-              <Button label="Choose photo" onPress={choosePhoto} variant="outline" />
-            </View>
-            <View style={styles.buttonColumn}>
-              <Button label="Take photo" onPress={takePhoto} variant="outline" />
-            </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.contentWrapper}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.headerSide} accessibilityRole="button" accessibilityLabel="Close">
+              <Ionicons name="close" size={26} color={colors.text} />
+            </Pressable>
+            <Text style={styles.headerTitle}>New post</Text>
+            <Pressable onPress={sharePost} disabled={!mediaUri || sharing} style={styles.shareButton} accessibilityRole="button">
+              <Text style={[styles.shareText, mediaUri && !sharing ? styles.shareEnabled : styles.shareDisabled]}>{sharing ? 'Sharing…' : 'Share'}</Text>
+            </Pressable>
           </View>
-          <TextInput
-            value={caption}
-            onChangeText={setCaption}
-            multiline
-            maxLength={280}
-            placeholder="Write a caption…"
-            placeholderTextColor={colors.muted}
-            textAlignVertical="top"
-            style={styles.captionInput}
-          />
-          <Text style={styles.counter}>{caption.length}/280</Text>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <View style={styles.divider} />
+          <KeyboardAvoidingView style={styles.keyboardArea} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <ScrollView
+              keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}>
+              {event ? (
+                <Text style={styles.eventLine} numberOfLines={1}>
+                  {categoryEmoji[event.category] ? `${categoryEmoji[event.category]} ` : ''}{event.title}
+                </Text>
+              ) : null}
+              <Pressable onPress={choosePhoto} style={[styles.photoArea, { width, height: width }]}>
+                {mediaUri ? (
+                  <Image source={{ uri: mediaUri }} style={styles.photo} resizeMode="cover" />
+                ) : (
+                  <View style={styles.emptyPhoto}>
+                    <Ionicons name="image-outline" size={48} color={colors.muted} />
+                    <Text style={styles.emptyPhotoText}>Add a photo of your activity</Text>
+                  </View>
+                )}
+              </Pressable>
+              <View style={styles.pickerButtons}>
+                <View style={styles.buttonColumn}>
+                  <Button label="Choose photo" onPress={choosePhoto} variant="outline" />
+                </View>
+                <View style={styles.buttonColumn}>
+                  <Button label="Take photo" onPress={takePhoto} variant="outline" />
+                </View>
+              </View>
+              <TextInput
+                value={caption}
+                onChangeText={setCaption}
+                multiline
+                maxLength={280}
+                placeholder="Write a caption…"
+                placeholderTextColor={colors.muted}
+                textAlignVertical="top"
+                inputAccessoryViewID={accessoryId}
+                style={styles.captionInput}
+              />
+              <Text style={styles.counter}>{caption.length}/280</Text>
+            </ScrollView>
+          </KeyboardAvoidingView>
+          {Platform.OS === 'ios' ? (
+            <InputAccessoryView nativeID={accessoryId}>
+              <View style={styles.accessory}>
+                <Pressable onPress={Keyboard.dismiss} accessibilityRole="button">
+                  <Text style={styles.doneText}>Done</Text>
+                </Pressable>
+              </View>
+            </InputAccessoryView>
+          ) : null}
+        </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  contentWrapper: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   headerSide: { width: spacing.xl + spacing.sm, alignItems: 'flex-start' },
   headerTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 17 },
@@ -145,6 +169,8 @@ const styles = StyleSheet.create({
   shareDisabled: { color: colors.muted },
   divider: { height: 1, backgroundColor: colors.border },
   keyboardArea: { flex: 1 },
+  accessory: { flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  doneText: { color: colors.accent, fontFamily: fonts.bold, fontSize: 16 },
   scrollContent: { paddingBottom: spacing.xl },
   eventLine: { ...type.label, color: colors.muted, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   photoArea: { backgroundColor: colors.surface },

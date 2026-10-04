@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { colors, spacing, type } from '../../constants/theme';
@@ -44,14 +44,18 @@ export default function LoginScreen() {
     const disabled = loading || !email.trim() || password.length < 6;
 
     return (
-        <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>Lifemaxxing</Text>
+        <SafeAreaView style={styles.screen}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+                <View style={styles.container}>
+                    <Text style={styles.title}>Lifemaxxing</Text>
 
             <Text style={styles.label}>Email</Text>
             <TextInput
                 autoCapitalize="none"
                 autoComplete="email"
                 keyboardType="email-address"
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
                 onChangeText={setEmail}
                 placeholder="email@address.com"
                 style={styles.input}
@@ -62,6 +66,8 @@ export default function LoginScreen() {
             <TextInput
                 autoCapitalize="none"
                 autoComplete="password"
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
                 onChangeText={setPassword}
                 placeholder="At least 6 characters"
                 secureTextEntry
@@ -73,12 +79,15 @@ export default function LoginScreen() {
                 <Button label={loading ? 'Signing in...' : 'Sign in'} onPress={signInWithEmail} disabled={disabled} />
                 <Button label="Create account" onPress={signUpWithEmail} variant="outline" disabled={disabled} />
             </View>
+                </View>
+            </TouchableWithoutFeedback>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: 'center', padding: spacing.lg, backgroundColor: colors.bg },
+    screen: { flex: 1, backgroundColor: colors.bg },
+    container: { flex: 1, justifyContent: 'center', padding: spacing.lg },
     title: { ...type.title, marginBottom: spacing.lg },
     label: { ...type.label, marginBottom: spacing.xs, marginTop: spacing.md },
     input: { color: colors.text, borderColor: colors.border, borderRadius: 0, borderBottomWidth: 1, fontFamily: type.body.fontFamily, fontSize: type.body.fontSize, paddingVertical: spacing.sm, paddingHorizontal: 0 },
