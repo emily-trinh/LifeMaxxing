@@ -8,6 +8,7 @@ import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { colors, fonts, radius, spacing, type } from '../constants/theme';
 import { useProfile } from '../lib/ProfileContext';
+import { signOut } from '../services/authService';
 import type { GroupMode } from '../types';
 
 
@@ -51,6 +52,15 @@ export default function SettingsScreen() {
 			saveTimer.current = setTimeout(() => router.back(), 1200);
 		} catch (error) {
 			Alert.alert('Unable to save changes', error instanceof Error ? error.message : 'Please try again.');
+		}
+	}
+
+	async function handleLogout() {
+		try {
+			await signOut();
+			router.replace('/login');
+		} catch (error) {
+			Alert.alert("Couldn't log out", error instanceof Error ? error.message : 'Please try again.');
 		}
 	}
 
@@ -155,30 +165,49 @@ export default function SettingsScreen() {
                         <Button label="Open AI test" variant="outline" onPress={() => router.push('/ai-test')} />
                     </View>
                 </View>
-			</ScrollView>
-		</SafeAreaView>
-	);
+
+                <View style={styles.logoutSection}>
+                    <View style={styles.logoutDivider} />
+                    <Pressable
+                        style={styles.logoutButton}
+                        onPress={() => Alert.alert('Log out?', 'You can log back in anytime.', [
+                            { text: 'Cancel', style: 'cancel' },
+                            { text: 'Log out', style: 'destructive', onPress: () => { void handleLogout(); } },
+                        ])}
+                        accessibilityRole="button"
+                        accessibilityLabel="Log out"
+                    >
+                        <Text style={styles.logoutButtonText}>Log out</Text>
+                    </Pressable>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
-	screen: { flex: 1, backgroundColor: colors.bg },
-	header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-	headerSide: { width: spacing.xl, alignItems: 'flex-start' },
-	headerTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 17 },
-	divider: { height: 1, backgroundColor: colors.border },
-	content: { paddingHorizontal: spacing.md, paddingTop: spacing.lg, paddingBottom: spacing.xl + spacing.lg },
-	section: { paddingBottom: spacing.lg, marginBottom: spacing.xl, borderBottomWidth: 1, borderBottomColor: colors.border },
-	sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-	sectionLabel: { ...type.label },
-	sectionValue: { color: colors.text, fontFamily: fonts.bold, fontSize: 15 },
-	sliderLabel: { ...type.label, marginTop: spacing.sm },
-	chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
-	groupSelector: { flexDirection: 'row', borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, overflow: 'hidden', marginTop: spacing.md },
-	groupOption: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: colors.bg },
-	selectedGroupOption: { backgroundColor: colors.ink },
-	groupLabel: { ...type.label, color: colors.text },
-	selectedGroupLabel: { color: colors.bg },
-	saveButton: { paddingTop: spacing.xs },
+    screen: { flex: 1, backgroundColor: colors.bg },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+    headerSide: { width: spacing.xl, alignItems: 'flex-start' },
+    headerTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 17 },
+    divider: { height: 1, backgroundColor: colors.border },
+    content: { paddingHorizontal: spacing.md, paddingTop: spacing.lg, paddingBottom: spacing.xl + spacing.lg },
+    section: { paddingBottom: spacing.lg, marginBottom: spacing.xl, borderBottomWidth: 1, borderBottomColor: colors.border },
+    sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    sectionLabel: { ...type.label },
+    sectionValue: { color: colors.text, fontFamily: fonts.bold, fontSize: 15 },
+    sliderLabel: { ...type.label, marginTop: spacing.sm },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
+    groupSelector: { flexDirection: 'row', borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, overflow: 'hidden', marginTop: spacing.md },
+    groupOption: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: colors.bg },
+    selectedGroupOption: { backgroundColor: colors.ink },
+    groupLabel: { ...type.label, color: colors.text },
+    selectedGroupLabel: { color: colors.bg },
+    saveButton: { paddingTop: spacing.xs },
     devSection: { marginTop: spacing.xl, paddingTop: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border },
-    devButton: { marginTop: spacing.md }
+    devButton: { marginTop: spacing.md },
+    logoutSection: { marginTop: spacing.xl },
+    logoutDivider: { height: 1, backgroundColor: colors.border },
+    logoutButton: { width: '100%', borderWidth: 1, borderColor: colors.danger, borderRadius: radius.md, paddingVertical: 14, marginTop: spacing.xl, alignItems: 'center', justifyContent: 'center' },
+    logoutButtonText: { color: colors.danger, fontFamily: fonts.medium, fontSize: 15, textAlign: 'center' },
 });

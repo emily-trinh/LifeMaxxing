@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { colors, fonts, spacing, type } from '../constants/theme';
 import { getEvent, getProfile } from '../lib/mockData';
 import { useProfile } from '../lib/ProfileContext';
@@ -14,7 +12,6 @@ export function PostCard({ post }: { post: Post }) {
 		: friends.find((friend) => friend.id === post.user_id) ?? getProfile(post.user_id);
 	const event = getEvent(post.event_id);
 	const { width } = useWindowDimensions();
-	const [liked, setLiked] = useState(false);
 	const username = profile?.username ?? 'A community member';
 
 	return (
@@ -30,15 +27,6 @@ export function PostCard({ post }: { post: Post }) {
 			</View>
 			<Image source={{ uri: post.media_url }} style={{ width, height: width }} resizeMode="cover" />
 			<View style={[styles.textRow, styles.content]}>
-				<View style={styles.actions}>
-				<Pressable
-					accessibilityRole="button"
-					accessibilityLabel={liked ? 'Unlike post' : 'Like post'}
-					onPress={() => setLiked((value) => !value)}
-					hitSlop={8}>
-					<Ionicons name={liked ? 'heart' : 'heart-outline'} size={24} color={liked ? colors.accent : colors.text} />
-				</Pressable>
-				</View>
 				<Text style={styles.caption}>
 					<Text style={styles.captionUsername}>{username} </Text>
 					{post.caption}
@@ -57,7 +45,6 @@ const styles = StyleSheet.create({
 	username: { ...type.label, color: colors.text, fontFamily: fonts.bold },
 	event: { ...type.meta, marginTop: spacing.xs / 2 },
 	content: { paddingTop: spacing.xs },
-	actions: { flexDirection: 'row', alignItems: 'center', height: spacing.xl, marginTop: spacing.xs },
 	caption: { ...type.body },
 	captionUsername: { ...type.label, color: colors.text, fontFamily: fonts.bold },
 	divider: { height: 1, backgroundColor: colors.border, marginTop: spacing.lg },

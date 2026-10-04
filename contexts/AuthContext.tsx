@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { JwtPayload, Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { signOut as signOutUser } from '../services/authService';
 
 interface AuthContextType {
     session: Session | null;
@@ -78,8 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
     const signOut = async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+        await signOutUser();
     };
 
     return (

@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PostCard } from '../../components/PostCard';
 import { colors, fonts, spacing, type } from '../../constants/theme';
+import { useAuth } from '../../contexts/AuthContext';
 import { getPostsByUser } from '../../services/postService';
 import type { Post } from '../../types';
 
@@ -13,12 +14,18 @@ export default function PostFeedScreen() {
   const userId = Array.isArray(params.userId) ? params.userId[0] ?? '' : params.userId ?? '';
   const postId = Array.isArray(params.postId) ? params.postId[0] ?? '' : params.postId ?? '';
   const [posts, setPosts] = useState<Post[]>([]);
+  const { user } = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
   const yPositions = useRef<Record<string, number>>({});
   const hasScrolled = useRef(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    if (!user) {
+      setPosts([]);
+      return;
+    }
+
     let mounted = true;
     setReady(false);
     void getPostsByUser(userId)
@@ -29,7 +36,7 @@ export default function PostFeedScreen() {
     return () => {
       mounted = false;
     };
-  }, [userId]);
+  }, [user, userId]);
 
   useEffect(() => {
     const fallback = setTimeout(() => {

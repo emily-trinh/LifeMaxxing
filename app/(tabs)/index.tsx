@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PostCard } from '../../components/PostCard';
 import { PromptCard } from '../../components/PromptCard';
 import { colors, fonts, radius, spacing, type } from '../../constants/theme';
+import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../lib/ProfileContext';
 import { useMission } from '../../lib/MissionContext';
 import { getAllPosts } from '../../services/postService';
@@ -35,6 +36,14 @@ function FeedHeader() {
 
 export default function HomeScreen() {
 	const [posts, setPosts] = useState<Post[]>([]);
+	const { user } = useAuth();
+
+	useEffect(() => {
+		if (!user) {
+			setPosts([]);
+		}
+	}, [user]);
+
 	useFocusEffect(useCallback(() => {
 		let mounted = true;
 		void getAllPosts()

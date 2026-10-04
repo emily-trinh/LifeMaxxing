@@ -2,16 +2,18 @@ import { router } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { formatEventDate } from '../../lib/format';
 import { Avatar } from '../../components/Avatar';
+import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { colors, fonts, radius, spacing, type } from '../../constants/theme';
 import { useProfile } from '../../lib/ProfileContext';
+import { formatEventDate } from '../../lib/format';
+import { getFriends, removeFriend } from '../../services/friendService';
 import { getMyActivities } from '../../services/eventService';
 import { getPostsByUser } from '../../services/postService';
-import type { Event, Post } from '../../types';
+import type { Event, Post, Profile } from '../../types';
 
 type ProfileTab = 'posts' | 'activities' | 'friends';
 const GRID_GAP = 1;
@@ -19,10 +21,11 @@ const GRID_GAP = 1;
 export default function ProfileScreen() {
 	const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
 	const { width } = useWindowDimensions();
-	const { profile, friends, friendsError } = useProfile();
+	const { profile } = useProfile();
 	const [userPosts, setUserPosts] = useState<Post[]>([]);
 	const [activities, setActivities] = useState<{ event: Event; status: 'going' | 'booked' }[]>([]);
-	const friends = getFriends();
+	const [friends, setFriends] = useState<Profile[]>([]);
+	const [loadingFriends, setLoadingFriends] = useState(false);
 	const thumbnailSize = Math.floor((width - GRID_GAP * 2) / 3);
 	const postRows: Post[][] = [];
 	for (let index = 0; index < userPosts.length; index += 3) {
@@ -35,9 +38,47 @@ export default function ProfileScreen() {
 			? 'Group only'
 			: 'Solo or group';
 	useFocusEffect(useCallback(() => {
+		let mounted = true;
+		setLoadingFriends(true);
+
 		void getPostsByUser(profile.id).then(setUserPosts).catch((error: unknown) => console.error(error));
 		void getMyActivities().then(setActivities);
+		void getFriends(profile.id)
+			.then((nextFriends) => {
+				if (mounted) setFriends(nextFriends);
+			})
+			.catch((error: unknown) => {
+				console.error(error);
+				if (mounted) setFriends([]);
+			})
+			.finally(() => {
+				if (mounted) setLoadingFriends(false);
+			});
+
+		return () => {
+			mounted = false;
+		};
 	}, [profile.id]));
+
+	async function handleRemoveFriend(friend: Profile) {
+		Alert.alert('Remove friend?', `${friend.username} won't be notified.`, [
+			{ text: 'Cancel', style: 'cancel' },
+			{
+				text: 'Remove',
+				style: 'destructive',
+				onPress: async () => {
+					const previousFriends = friends;
+					setFriends((current) => current.filter((entry) => entry.id !== friend.id));
+					try {
+						await removeFriend(profile.id, friend.id);
+					} catch (error) {
+						setFriends(previousFriends);
+						Alert.alert("Couldn't remove friend", error instanceof Error ? error.message : 'Please try again.');
+					}
+				},
+			},
+		]);
+	}
 
 	return (
 		<SafeAreaView style={styles.screen} edges={['top']}>
@@ -107,8 +148,6 @@ export default function ProfileScreen() {
 								</View>
 							))}
 						</View>
-					) : friendsError ? (
-						<Text style={styles.empty}>{friendsError}</Text>
 					) : (
 						<Text style={styles.empty}>No posts yet. Go do something worth posting.</Text>
 					)
@@ -133,24 +172,39 @@ export default function ProfileScreen() {
 						<Text style={styles.empty}>Nothing booked yet. Check out Explore.</Text>
 					)
 				) : (
-					friends.length ? (
-						<View>
-							{friends.map((friend, index) => (
-								<View key={friend.id}>
-									<View style={styles.friendRow}>
-										<Avatar name={friend.username} url={friend.avatar_url} size={44} />
-										<View style={styles.friendCopy}>
-											<Text style={styles.friendName}>{friend.username}</Text>
-											<Text style={styles.friendMeta}>{'\uD83D\uDD25'} {friend.current_streak} week streak</Text>
-										</View>
-									</View>
-									{index < friends.length - 1 ? <View style={styles.friendDivider} /> : null}
-								</View>
-							))}
+					<View>
+						<View style={styles.addFriendsWrap}>
+							<Button label="Add friends" variant="outline" onPress={() => router.push('/friends/add')} />
 						</View>
-					) : (
-						<Text style={styles.empty}>No friends yet. Invite someone to join you.</Text>
-					)
+						{loadingFriends ? (
+							<Text style={styles.empty}>Loading friends...</Text>
+						) : friends.length ? (
+							<View>
+								{friends.map((friend, index) => (
+									<View key={friend.id}>
+										<View style={styles.friendRow}>
+											<Avatar name={friend.username} url={friend.avatar_url} size={44} />
+											<View style={styles.friendCopy}>
+												<Text style={styles.friendName} numberOfLines={1}>{friend.username}</Text>
+												<Text style={styles.friendMeta} numberOfLines={1}>{'\uD83D\uDD25'} {friend.current_streak} week streak</Text>
+											</View>
+											<Pressable
+												onPress={() => handleRemoveFriend(friend)}
+												style={styles.removeButton}
+												accessibilityRole="button"
+												accessibilityLabel={`Remove ${friend.username} as a friend`}
+											>
+												<Text style={styles.removeButtonText}>Remove</Text>
+											</Pressable>
+										</View>
+										{index < friends.length - 1 ? <View style={styles.friendDivider} /> : null}
+									</View>
+								))}
+							</View>
+						) : (
+							<Text style={styles.empty}>No friends yet. Tap Add friends to find people.</Text>
+						)}
+					</View>
 				)}
 			</ScrollView>
 		</SafeAreaView>
@@ -200,8 +254,11 @@ const styles = StyleSheet.create({
 	friendRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
 	friendCopy: { flex: 1 },
 	friendName: { color: colors.text, fontFamily: fonts.bold, fontSize: 15 },
-	friendMeta: { ...type.label, marginTop: spacing.xs },
+	friendMeta: { ...type.label, marginTop: spacing.xs, color: colors.muted },
 	friendDivider: { height: 1, backgroundColor: colors.border, marginLeft: spacing.md },
+	addFriendsWrap: { paddingHorizontal: spacing.md, paddingVertical: spacing.md },
+	removeButton: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingVertical: 6, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
+	removeButtonText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
 	activityRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
 	activityImage: { width: spacing.xl * 2 + spacing.sm, height: spacing.xl * 2 + spacing.sm, borderRadius: radius.sm, backgroundColor: colors.surface },
 	activityCopy: { flex: 1, flexShrink: 1 },
