@@ -23,7 +23,7 @@ export const categoryEmoji: Record<string, string> = {
 };
 
 // Real device location will replace this reference point later.
-export const REFERENCE_POINT = { latitude: 37.7749, longitude: -122.4194 };
+export const REFERENCE_POINT = { latitude: 49.2781, longitude: -122.9199 };
 
 export function distanceKm(latitude: number, longitude: number): number {
   const earthRadiusKm = 6371;
@@ -43,7 +43,8 @@ export function formatDistance(km: number): string {
   return `${distance} km away`;
 }
 
-export function formatEventDate(iso: string): string {
+export function formatEventDate(iso: string | null): string {
+  if (!iso) return 'Open year-round';
   const date = new Date(iso);
   const dayAndDate = new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
@@ -58,7 +59,8 @@ export function formatEventDate(iso: string): string {
   return `${dayAndDate} · ${time}`;
 }
 
-export function formatEventTime(iso: string): string {
+export function formatEventTime(iso: string | null): string {
+  if (!iso) return 'Open year-round';
   return new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
     minute: '2-digit',

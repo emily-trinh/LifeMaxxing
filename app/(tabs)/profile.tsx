@@ -10,6 +10,7 @@ import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { colors, fonts, radius, spacing, type } from '../../constants/theme';
 import { useProfile } from '../../lib/ProfileContext';
+import { useMission } from '../../lib/MissionContext';
 import { formatLongDate, formatTimeRange } from '../../lib/format';
 import { getMyBookings } from '../../services/calendarService';
 import { getFriends, removeFriend } from '../../services/friendService';
@@ -24,6 +25,7 @@ export default function ProfileScreen() {
 	const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
 	const { width } = useWindowDimensions();
 	const { profile } = useProfile();
+	const { simulatedDate } = useMission();
 	const [userPosts, setUserPosts] = useState<Post[]>([]);
 	const [bookings, setBookings] = useState<CalendarEntry[]>([]);
 	const [loadingBookings, setLoadingBookings] = useState(false);
@@ -77,9 +79,9 @@ export default function ProfileScreen() {
 		};
 	}, [profile.id]));
 
-	const now = Date.now();
-	const upcomingBookings = bookings.filter((entry) => new Date(entry.endsAt).getTime() > now);
-	const pastBookings = bookings.filter((entry) => new Date(entry.endsAt).getTime() <= now);
+	const configuredDayStart = new Date(simulatedDate);
+	configuredDayStart.setHours(0, 0, 0, 0);
+	const upcomingBookings = bookings.filter((entry) => new Date(entry.startsAt).getTime() >= configuredDayStart.getTime());
 
 	function refreshBookings() {
 		void getMyBookings()
@@ -181,24 +183,12 @@ export default function ProfileScreen() {
 				) : activeTab === 'activities' ? (
 					loadingBookings ? (
 						<Text style={styles.empty}>Loading activities...</Text>
-					) : bookings.length ? (
+					) : upcomingBookings.length ? (
 						<View>
-							{upcomingBookings.length ? (
-								<View>
-									<Text style={styles.activitySectionLabel}>Upcoming</Text>
-									{upcomingBookings.map((entry, index) => (
-										<BookingRow key={entry.id} entry={entry} last={index === upcomingBookings.length - 1} onPress={() => setSelectedBooking(entry)} />
-									))}
-								</View>
-							) : null}
-							{pastBookings.length ? (
-								<View>
-									<Text style={styles.activitySectionLabel}>Past</Text>
-									{pastBookings.map((entry, index) => (
-										<BookingRow key={entry.id} entry={entry} last={index === pastBookings.length - 1} onPress={() => setSelectedBooking(entry)} />
-									))}
-								</View>
-							) : null}
+							<Text style={styles.activitySectionLabel}>Upcoming</Text>
+							{upcomingBookings.map((entry, index) => (
+								<BookingRow key={entry.id} entry={entry} last={index === upcomingBookings.length - 1} onPress={() => setSelectedBooking(entry)} />
+							))}
 						</View>
 					) : (
 						<Text style={styles.empty}>Nothing booked yet. Check out Explore.</Text>

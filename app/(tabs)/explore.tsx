@@ -42,7 +42,9 @@ export default function ExploreScreen() {
       label: `${categoryEmoji[category] ? `${categoryEmoji[category]} ` : ''}${category}`,
     })),
   ];
+  const now = new Date();
   const visibleEvents = events
+    .filter((event) => event.start_time !== null && new Date(event.start_time) > now)
     .filter((event) => distanceKm(event.latitude, event.longitude) <= profile.preferences.radius_km)
     .filter((event) => {
       if (selectedFilter === 'All') return true;
@@ -50,7 +52,10 @@ export default function ExploreScreen() {
       if (selectedFilter === 'Paid') return !event.is_free;
       return event.category === selectedFilter;
     })
-    .sort((first, second) => new Date(first.start_time).getTime() - new Date(second.start_time).getTime());
+    .sort((first, second) => (
+      (first.start_time ? new Date(first.start_time).getTime() : Number.POSITIVE_INFINITY)
+      - (second.start_time ? new Date(second.start_time).getTime() : Number.POSITIVE_INFINITY)
+    ));
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>

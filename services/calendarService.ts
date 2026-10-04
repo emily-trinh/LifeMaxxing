@@ -77,7 +77,9 @@ function toAppEvent(event: Event): AppEvent {
 }
 
 function hasKnownEventTime(event: Event): boolean {
-  return !/^\d{4}-\d{2}-\d{2}$/.test(event.start_time)
+  return event.start_time !== null
+    && event.end_time !== null
+    && !/^\d{4}-\d{2}-\d{2}$/.test(event.start_time)
     && !/^\d{4}-\d{2}-\d{2}$/.test(event.end_time);
 }
 
