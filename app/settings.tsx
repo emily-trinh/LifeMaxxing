@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
@@ -44,10 +44,14 @@ export default function SettingsScreen() {
 			: [...current, interest]);
 	}
 
-	function saveChanges() {
-		updateProfile({ preferences: { radius_km: radiusKm, min_price: minPrice, max_price: maxPrice, interests, group_mode: groupMode } });
-		setSaved(true);
-		saveTimer.current = setTimeout(() => router.back(), 1200);
+	async function saveChanges() {
+		try {
+			await updateProfile({ preferences: { radius_km: radiusKm, min_price: minPrice, max_price: maxPrice, interests, group_mode: groupMode } });
+			setSaved(true);
+			saveTimer.current = setTimeout(() => router.back(), 1200);
+		} catch (error) {
+			Alert.alert('Unable to save changes', error instanceof Error ? error.message : 'Please try again.');
+		}
 	}
 
 	return (

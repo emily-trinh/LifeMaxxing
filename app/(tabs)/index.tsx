@@ -36,7 +36,17 @@ function FeedHeader() {
 export default function HomeScreen() {
 	const [posts, setPosts] = useState<Post[]>([]);
 	useFocusEffect(useCallback(() => {
-		setPosts(getAllPosts());
+		let mounted = true;
+		void getAllPosts()
+			.then((loadedPosts) => {
+				if (mounted) setPosts(loadedPosts);
+			})
+			.catch((error: unknown) => {
+				console.error(error);
+			});
+		return () => {
+			mounted = false;
+		};
 	}, []));
 
 	return (

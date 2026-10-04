@@ -3,11 +3,15 @@ import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'r
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, spacing, type } from '../constants/theme';
 import { getEvent, getProfile } from '../lib/mockData';
+import { useProfile } from '../lib/ProfileContext';
 import type { Post } from '../types';
 import { Avatar } from './Avatar';
 
 export function PostCard({ post }: { post: Post }) {
-	const profile = getProfile(post.user_id);
+	const { profile: currentProfile, friends } = useProfile();
+	const profile = post.user_id === currentProfile.id
+		? currentProfile
+		: friends.find((friend) => friend.id === post.user_id) ?? getProfile(post.user_id);
 	const event = getEvent(post.event_id);
 	const { width } = useWindowDimensions();
 	const [liked, setLiked] = useState(false);

@@ -5,6 +5,7 @@ import { BricolageGrotesque_700Bold, BricolageGrotesque_800ExtraBold } from '@ex
 import { DMSans_400Regular, DMSans_500Medium, DMSans_700Bold } from '@expo-google-fonts/dm-sans';
 import { useFonts } from 'expo-font';
 import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { MissionProvider } from '../lib/MissionContext';
 import { ProfileProvider } from '../lib/ProfileContext';
@@ -27,8 +28,11 @@ function AuthGate() {
         }
     }, [loading, router, segments, session]);
 
-    return (
-      <ProfileProvider>
+    if (loading) {
+        return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator /></View>;
+    }
+
+    const app = (
         <MissionProvider>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -39,8 +43,13 @@ function AuthGate() {
             <Stack.Screen name="settings" options={{ headerShown: false }} />
           </Stack>
         </MissionProvider>
-      </ProfileProvider>
     );
+
+    const inAuthGroup = segments[0] === '(auth)' || String(segments[0]) === 'auth';
+    if (!session && !inAuthGroup) return <View style={{ flex: 1 }} />;
+    if (session && inAuthGroup) return <View style={{ flex: 1 }} />;
+
+    return session ? <ProfileProvider>{app}</ProfileProvider> : app;
 }
 
 export default function RootLayout() {
