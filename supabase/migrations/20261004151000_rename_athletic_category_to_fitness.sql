@@ -1,0 +1,1 @@
+-- Previously applied remotely; retained locally for migration history.
