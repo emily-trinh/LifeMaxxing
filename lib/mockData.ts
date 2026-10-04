@@ -1,10 +1,10 @@
 import type { Event, Post, Profile, WeeklyPrompt } from '../types';
 
 export const mockProfiles: Profile[] = [
-  { id: 'user-1', username: 'maya_moves', avatar_url: null, interests: ['hiking', 'food'], radius_km: 15, min_price: 0, max_price: 60, group_mode: 'either', current_streak: 4 },
-  { id: 'user-2', username: 'jonahoutside', avatar_url: null, interests: ['cycling', 'music'], radius_km: 10, min_price: 0, max_price: 40, group_mode: 'group', current_streak: 8 },
-  { id: 'user-3', username: 'alex_makes', avatar_url: null, interests: ['art', 'cooking'], radius_km: 8, min_price: 5, max_price: 80, group_mode: 'either', current_streak: 2 },
-  { id: 'user-4', username: 'sam_solo', avatar_url: null, interests: ['wellness', 'books'], radius_km: 20, min_price: 0, max_price: 30, group_mode: 'solo', current_streak: 11 },
+  { id: 'user-1', username: 'maya_moves', avatar_url: null, preferences: { interests: ['hiking', 'food'], radius_km: 15, min_price: 0, max_price: 60, group_mode: 'either' }, current_streak: 4 },
+  { id: 'user-2', username: 'jonahoutside', avatar_url: null, preferences: { interests: ['cycling', 'music'], radius_km: 10, min_price: 0, max_price: 40, group_mode: 'group' }, current_streak: 8 },
+  { id: 'user-3', username: 'alex_makes', avatar_url: null, preferences: { interests: ['art', 'cooking'], radius_km: 8, min_price: 5, max_price: 80, group_mode: 'either' }, current_streak: 2 },
+  { id: 'user-4', username: 'sam_solo', avatar_url: null, preferences: { interests: ['wellness', 'books'], radius_km: 20, min_price: 0, max_price: 30, group_mode: 'solo' }, current_streak: 11 },
 ];
 
 const image = (seed: string) => `https://images.unsplash.com/${seed}?auto=format&fit=crop&w=900&q=80`;

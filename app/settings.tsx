@@ -19,20 +19,20 @@ const groupOptions: { label: string; value: GroupMode }[] = [
 
 export default function SettingsScreen() {
 	const { profile, updateProfile } = useProfile();
-	const [radiusKm, setRadiusKm] = useState(profile.radius_km);
-	const [minPrice, setMinPrice] = useState(profile.min_price);
-	const [maxPrice, setMaxPrice] = useState(profile.max_price);
-	const [interests, setInterests] = useState(profile.interests);
-	const [groupMode, setGroupMode] = useState<GroupMode>(profile.group_mode);
+	const [radiusKm, setRadiusKm] = useState(profile.preferences.radius_km);
+	const [minPrice, setMinPrice] = useState(profile.preferences.min_price);
+	const [maxPrice, setMaxPrice] = useState(profile.preferences.max_price);
+	const [interests, setInterests] = useState(profile.preferences.interests);
+	const [groupMode, setGroupMode] = useState<GroupMode>(profile.preferences.group_mode);
 	const [saved, setSaved] = useState(false);
 	const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	const unchanged = radiusKm === profile.radius_km
-		&& minPrice === profile.min_price
-		&& maxPrice === profile.max_price
-		&& groupMode === profile.group_mode
-		&& interests.length === profile.interests.length
-		&& interests.every((interest) => profile.interests.includes(interest));
+	const unchanged = radiusKm === profile.preferences.radius_km
+		&& minPrice === profile.preferences.min_price
+		&& maxPrice === profile.preferences.max_price
+		&& groupMode === profile.preferences.group_mode
+		&& interests.length === profile.preferences.interests.length
+		&& interests.every((interest) => profile.preferences.interests.includes(interest));
 
 	function toggleInterest(interest: string) {
 		setInterests((current) => current.includes(interest)
@@ -41,7 +41,7 @@ export default function SettingsScreen() {
 	}
 
 	function saveChanges() {
-		updateProfile({ radius_km: radiusKm, min_price: minPrice, max_price: maxPrice, interests, group_mode: groupMode });
+		updateProfile({ preferences: { radius_km: radiusKm, min_price: minPrice, max_price: maxPrice, interests, group_mode: groupMode } });
 		setSaved(true);
 		saveTimer.current = setTimeout(() => router.back(), 1200);
 	}

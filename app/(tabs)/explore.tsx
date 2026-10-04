@@ -23,7 +23,7 @@ export default function ExploreScreen() {
     })),
   ];
   const events = mockEvents
-    .filter((event) => distanceKm(event.latitude, event.longitude) <= profile.radius_km)
+    .filter((event) => distanceKm(event.latitude, event.longitude) <= profile.preferences.radius_km)
     .filter((event) => {
       if (selectedFilter === 'All') return true;
       if (selectedFilter === 'Free') return event.is_free;

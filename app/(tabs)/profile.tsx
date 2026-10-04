@@ -24,10 +24,10 @@ export default function ProfileScreen() {
 	const [activities, setActivities] = useState<{ event: Event; status: 'going' | 'booked' }[]>([]);
 	const friends = getFriends();
 	const thumbnailSize = (width - 2) / 3;
-	const interests = profile.interests.map((interest) => `${interest.charAt(0).toUpperCase()}${interest.slice(1)}`);
-	const groupPreference = profile.group_mode === 'solo'
+	const interests = profile.preferences.interests.map((interest) => `${interest.charAt(0).toUpperCase()}${interest.slice(1)}`);
+	const groupPreference = profile.preferences.group_mode === 'solo'
 		? 'Solo only'
-		: profile.group_mode === 'group'
+		: profile.preferences.group_mode === 'group'
 			? 'Group only'
 			: 'Solo or group';
 	useFocusEffect(useCallback(() => {
@@ -55,7 +55,7 @@ export default function ProfileScreen() {
 								<Text style={styles.streakNumber}>{profile.current_streak}</Text>
 							</View>
 						</View>
-						<Text style={styles.accountMeta}>{profile.radius_km} km radius · ${profile.min_price} to ${profile.max_price}</Text>
+						<Text style={styles.accountMeta}>{profile.preferences.radius_km} km radius · ${profile.preferences.min_price} to ${profile.preferences.max_price}</Text>
 					</View>
 				</View>
 				<View style={styles.chips}>
