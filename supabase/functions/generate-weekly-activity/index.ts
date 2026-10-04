@@ -72,7 +72,11 @@ function buildPrompt(preferences: UserPreferences, events: CandidateEvent[]) {
     'You must select only one event ID from the supplied candidates, or null if no event is a strong match.',
     'Never invent or modify an event ID, name, price, location, date, time, availability, or other event fact.',
     `If no event is a strong match, return eventId null and exactly this reason: ${noMatchReason}`,
-    'Return only JSON matching the provided schema. Keep reason to one concise sentence.',
+    'Write the reason directly to the person in a warm, welcoming, natural tone.',
+    'Use "you" and "your" when helpful. Do not say "the user", "the user\'s", "the customer", or refer to preferences as constraints, criteria, limits, or requirements.',
+    'Do not mention internal matching logic, the selection process, or technical terms such as "maximum price constraint".',
+    'Mention one or two specific positive details from the event and preferences, such as the activity, shared interests, welcoming group setting, or comfortable price.',
+    'Return only JSON matching the provided schema. Keep reason to one friendly sentence.',
     `User preferences:\n${JSON.stringify(preferences)}`,
     `Available events:\n${JSON.stringify(events)}`,
   ].join('\n\n');

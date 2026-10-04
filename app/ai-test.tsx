@@ -50,7 +50,7 @@ export default function AiTestScreen() {
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.heading}>AI Integration Test</Text>
       <Text style={styles.description}>Tests the deployed weekly activity Edge Function with five local events.</Text>
-      <Button onPress={handleTest}>{isLoading ? 'Testing...' : 'Test Weekly Activity'}</Button>
+      <Button label={isLoading ? 'Testing...' : 'Test Weekly Activity'} onPress={handleTest} disabled={isLoading} />
       {isLoading && <Text style={styles.status}>Loading recommendation...</Text>}
       {result && <View style={styles.result}><Text style={styles.label}>Event ID</Text><Text style={styles.value}>{result.eventId ?? 'No matching event'}</Text><Text style={styles.label}>Reason</Text><Text style={styles.value}>{result.reason}</Text></View>}
       {error && <View style={styles.error}><Text style={styles.label}>Error</Text><Text style={styles.errorText}>{error}</Text></View>}
@@ -59,13 +59,13 @@ export default function AiTestScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  screen: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.md, gap: spacing.md },
   heading: { color: colors.text, fontSize: 28, fontWeight: '800' },
-  description: { color: colors.mutedText, fontSize: 16, lineHeight: 23 },
-  status: { color: colors.mutedText },
+  description: { color: colors.muted, fontSize: 16, lineHeight: 23 },
+  status: { color: colors.muted },
   result: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 12, borderWidth: 1, padding: spacing.md, gap: spacing.sm },
-  label: { color: colors.primary, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  label: { color: colors.ink, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
   value: { color: colors.text, fontSize: 16 },
   error: { backgroundColor: '#FDECEC', borderColor: colors.danger, borderRadius: 12, borderWidth: 1, padding: spacing.md, gap: spacing.sm },
   errorText: { color: colors.danger, fontSize: 16 },
