@@ -25,8 +25,8 @@ export interface Event {
   category: string;
   price: number;
   is_free: boolean;
-  start_time: string;
-  end_time: string;
+  start_time: string | null;
+  end_time: string | null;
   address: string;
   latitude: number;
   longitude: number;

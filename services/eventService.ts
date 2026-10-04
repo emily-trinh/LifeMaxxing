@@ -28,5 +28,8 @@ export async function getMyActivities(): Promise<{ event: Event; status: 'going'
     return [getEvent(booking.sourceEventId).then((event) => event ? { event, status: booking.status as 'going' | 'booked' } : null)];
   }));
   return activities.filter((activity): activity is { event: Event; status: 'going' | 'booked' } => activity !== null)
-    .sort((first, second) => new Date(first.event.start_time).getTime() - new Date(second.event.start_time).getTime());
+    .sort((first, second) => (
+      (first.event.start_time ? new Date(first.event.start_time).getTime() : Number.POSITIVE_INFINITY)
+      - (second.event.start_time ? new Date(second.event.start_time).getTime() : Number.POSITIVE_INFINITY)
+    ));
 }

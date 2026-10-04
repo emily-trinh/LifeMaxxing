@@ -6,8 +6,8 @@ export async function getEvents(fromDate?: Date, toDate?: Date): Promise<Event[]
     .from('events')
     .select('id, title, description, category, price, is_free, start_time, end_time, address, latitude, longitude, capacity, image_url, is_group_activity, is_outdoor')
     .order('start_time', { ascending: true });
-  if (fromDate) query = query.gte('start_time', fromDate.toISOString());
-  if (toDate) query = query.lt('start_time', toDate.toISOString());
+  if (fromDate) query = query.or(`start_time.gte.${fromDate.toISOString()},start_time.is.null`);
+  if (toDate) query = query.or(`start_time.lt.${toDate.toISOString()},start_time.is.null`);
 
   const { data, error } = await query;
   if (error) throw new Error(`Unable to load events: ${error.message}`);

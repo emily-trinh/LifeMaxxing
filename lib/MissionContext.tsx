@@ -99,24 +99,31 @@ export function MissionProvider({ children }: { children: ReactNode }) {
     if (!isCurrent()) return;
     const availableEvents = await getEvents(currentDayStart, currentWeekEnd);
     if (!isCurrent()) return;
+    const currentWeekKey = getWeekKey(missionDate);
+    const weeksSinceCompletion = profile.last_completed_week
+      ? weeksBetween(profile.last_completed_week, currentWeekKey)
+      : null;
+    const hasCompletedPost = recentPosts.some((post) => post.event_id);
+    if (!hasCompletedPost && (profile.current_streak !== 0 || profile.last_completed_week !== null)) {
+      void updateProfile({
+        current_streak: 0,
+        last_completed_week: null,
+      }).catch((error: unknown) => {
+        console.error('Unable to clear streak without a completed post:', error);
+      });
+    } else if (weeksSinceCompletion !== null && weeksSinceCompletion > 1 && profile.current_streak !== 0) {
+      void updateProfile({ current_streak: 0 }).catch((error: unknown) => {
+        console.error('Unable to persist missed-week streak reset:', error);
+      });
+    }
     const completedPost = recentPosts.find((post) => (
       post.event_id
       && availableEvents.some((event) => (
         event.id === post.event_id
         && (new Date(post.created_at) >= currentWeekStart && new Date(post.created_at) < currentWeekEnd
-          || event.start_time >= currentWeekStart.toISOString())
+          || (event.start_time !== null && event.start_time >= currentWeekStart.toISOString()))
       ))
     ));
-    const currentWeekKey = getWeekKey(missionDate);
-    const weeksSinceCompletion = profile.last_completed_week
-      ? weeksBetween(profile.last_completed_week, currentWeekKey)
-      : null;
-    if (weeksSinceCompletion !== null && weeksSinceCompletion > 1 && profile.current_streak !== 0) {
-      void updateProfile({ current_streak: 0 }).catch((error: unknown) => {
-        console.error('Unable to persist mission streak:', error);
-      });
-    }
-
     if (completedPost?.event_id) {
       const completedEvent = await getEvent(completedPost.event_id);
       if (!isCurrent()) return;
