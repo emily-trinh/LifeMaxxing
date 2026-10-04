@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Image,
@@ -22,8 +22,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { colors, fonts, spacing, type } from '../../constants/theme';
 import { categoryEmoji } from '../../lib/format';
-import { getEvent } from '../../lib/mockData';
+import { getEvent } from '../../services/events';
+import type { Event } from '../../types';
 import { useProfile } from '../../lib/ProfileContext';
+import { useMission } from '../../lib/MissionContext';
 import { createPost } from '../../services/postService';
 
 const accessoryId = 'doneAccessory';
@@ -31,12 +33,26 @@ const accessoryId = 'doneAccessory';
 export default function CreatePostScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const { profile } = useProfile();
+  const { completeMission } = useMission();
   const { width } = useWindowDimensions();
   const [mediaUri, setMediaUri] = useState<string | null>(null);
   const [mediaBase64, setMediaBase64] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [sharing, setSharing] = useState(false);
-  const event = getEvent(eventId);
+  const [event, setEvent] = useState<Event | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!eventId) return () => { mounted = false; };
+    void getEvent(eventId)
+      .then((loadedEvent) => {
+        if (mounted) setEvent(loadedEvent);
+      })
+      .catch((error: unknown) => {
+        if (mounted) Alert.alert('Unable to load event', error instanceof Error ? error.message : 'Please try again.');
+      });
+    return () => { mounted = false; };
+  }, [eventId]);
 
   async function choosePhoto() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -80,13 +96,14 @@ export default function CreatePostScreen() {
     if (!mediaUri || sharing) return;
     setSharing(true);
     try {
-      await createPost({
+      const createdPost = await createPost({
         userId: profile.id,
         eventId: eventId ?? '',
         mediaUri,
         mediaBase64,
         caption: caption.trim(),
       });
+      await completeMission(eventId, createdPost.created_at);
       router.replace('/(tabs)');
     } catch (error) {
       Alert.alert(

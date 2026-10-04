@@ -6,15 +6,14 @@ import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { Confetti } from '../../components/Confetti';
 import { colors, fonts, radius, spacing, type } from '../../constants/theme';
-import { mockEvents } from '../../lib/mockData';
-import { categoryEmoji, formatEventDate } from '../../lib/format';
+import { categoryEmoji, formatEventDate, formatEventTime } from '../../lib/format';
 import { getAttendanceStatus, rsvpToEvent } from '../../services/eventService';
 import { addEventToCalendar, getEntryBySourceEventId } from '../../services/calendarService';
 import type { AttendanceStatus } from '../../services/eventService';
 import { useMission } from '../../lib/MissionContext';
 
 export default function PromptScreen() {
-  const { activeEvent, activeEventId, setActiveEventId, recommendation, recommendationLoading, recommendationError } = useMission();
+  const { activeEvent, activeEventId, chooseFreeEvent, isCompleted, recommendation, recommendationLoading, recommendationError } = useMission();
   const [attendance, setAttendance] = useState<AttendanceStatus | 'loading'>('loading');
   const [booking, setBooking] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
@@ -88,9 +87,7 @@ export default function PromptScreen() {
   }
 
   function chooseFreeActivity() {
-    const alternatives = mockEvents.filter((item) => item.is_free && item.id !== event.id);
-    if (alternatives.length === 0) return;
-    setActiveEventId(alternatives[Math.floor(Math.random() * alternatives.length)].id);
+    chooseFreeEvent();
   }
 
   const handleConfettiDone = useCallback(() => {
@@ -103,13 +100,13 @@ export default function PromptScreen() {
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.headingBlock}>
           <Text style={styles.screenTitle}>Your mission</Text>
-          <Text style={styles.subtitle}>something new to try this week</Text>
+          <Text style={styles.subtitle}>{isCompleted ? 'mission complete' : 'something new to try this week'}</Text>
         </View>
         <View style={styles.missionDivider} />
         <View style={styles.missionText}>
           <Text style={styles.eventTitle}>{event.title}</Text>
           <Text style={styles.eventDescription}>{event.description}</Text>
-          {recommendationLoading ? <Text style={styles.aiStatus}>Finding your weekly activity...</Text> : null}
+          {recommendationLoading && !isCompleted ? <Text style={styles.aiStatus}>Finding your weekly activity...</Text> : null}
           {recommendationError ? <Text style={styles.aiError}>{recommendationError}</Text> : null}
           {recommendation?.eventId === null ? <Text style={styles.aiError}>{recommendation.reason}</Text> : null}
           {recommendation?.eventId === event.id ? <Text style={styles.reason}>Why this was picked: {recommendation.reason}</Text> : null}
@@ -120,12 +117,17 @@ export default function PromptScreen() {
             {chips.map((chip) => <Chip key={chip} label={chip} />)}
           </View>
           <View style={styles.details}>
-            <DetailRow icon="◷" label="Date" value={formatEventDate(event.start_time)} />
+            <DetailRow
+              icon="◷"
+              label={event.is_free ? 'Time' : 'Date'}
+              value={event.is_free ? formatEventTime(event.start_time) : formatEventDate(event.start_time)}
+            />
             <DetailRow icon="⌖" label="Where" value={event.address} />
           </View>
           <View style={styles.attendanceSection}>
-            {attendance === 'going' ? <AttendanceRow label="You're in 🎉" /> : null}
-            {attendance === 'booked' ? <AttendanceRow label="Booked 🎟️" /> : null}
+            {isCompleted ? <Text style={styles.nextMission}>Mission complete ✓{'\n'}Wait next week for the next mission.</Text> : null}
+            {!isCompleted && attendance === 'going' ? <AttendanceRow label="You're in 🎉" /> : null}
+            {!isCompleted && attendance === 'booked' ? <AttendanceRow label="Booked 🎟️" /> : null}
             {!event.is_free && attendance === 'none' ? (
               <>
                 <Button
@@ -136,7 +138,7 @@ export default function PromptScreen() {
                 <Button label="See a free event instead" onPress={chooseFreeActivity} variant="outline" />
               </>
             ) : null}
-            {attendance === 'going' || attendance === 'booked' ? (
+            {!isCompleted && (attendance === 'going' || attendance === 'booked') ? (
               <Button label="I did it" onPress={() => setConfettiVisible(true)} />
             ) : null}
           </View>
@@ -193,6 +195,7 @@ const styles = StyleSheet.create({
   detailValue: { ...type.body, flex: 1, flexShrink: 1, textAlign: 'right' },
   attendanceSection: { gap: spacing.sm, marginTop: spacing.lg },
   attendanceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
+  nextMission: { ...type.body, color: colors.ink, fontFamily: fonts.bold, marginBottom: spacing.md },
   statusIcon: { ...type.icon, color: colors.accent, fontFamily: fonts.bold },
   statusLabel: { ...type.status },
 });

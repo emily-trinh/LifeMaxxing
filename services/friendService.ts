@@ -8,6 +8,7 @@ type ProfileRow = {
   username: string | null;
   avatar_url: string | null;
   current_streak: number | null;
+  last_completed_week: string | null;
 };
 
 const defaultPreferences: Profile['preferences'] = {
@@ -24,6 +25,7 @@ function toProfile(row: ProfileRow): Profile {
     username: row.username ?? 'User',
     avatar_url: row.avatar_url,
     current_streak: row.current_streak ?? 0,
+    last_completed_week: row.last_completed_week,
     preferences: { ...defaultPreferences },
   };
 }
@@ -43,7 +45,7 @@ export async function getSuggestions(userId: string, query = ''): Promise<Profil
 
   let request = supabase
     .from('profiles')
-    .select('id, username, avatar_url, current_streak')
+    .select('id, username, avatar_url, current_streak, last_completed_week')
     .not('id', 'in', `(${excluded.join(',')})`)
     .order('username', { ascending: true })
     .limit(30);

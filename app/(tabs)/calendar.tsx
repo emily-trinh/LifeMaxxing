@@ -19,6 +19,7 @@ import { colors, fonts, radius, spacing, type } from '../../constants/theme';
 import { formatHourLabel, formatLongDate, formatTimeRange } from '../../lib/format';
 import { getEntries } from '../../services/calendarService';
 import type { CalendarEntry } from '../../types/activity';
+import { useMission } from '../../lib/MissionContext';
 
 const HOUR_HEIGHT = 64;
 const TIMELINE_GUTTER = 56;
@@ -113,17 +114,18 @@ function makeTimedBlocks(entries: CalendarEntry[], day: Date): TimedBlock[] {
 }
 
 export default function CalendarScreen() {
+  const { simulatedDate } = useMission();
   const { width } = useWindowDimensions();
   const dayCellWidth = Math.floor(width / 7);
   const [visibleMonth, setVisibleMonth] = useState(() => {
-    const today = new Date();
+    const today = simulatedDate;
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
-  const [selectedDay, setSelectedDay] = useState(() => startOfDay(new Date()));
+  const [selectedDay, setSelectedDay] = useState(() => startOfDay(simulatedDate));
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'month' | 'day'>('month');
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState(() => new Date(simulatedDate));
   const [selectedBooking, setSelectedBooking] = useState<CalendarEntry | null>(null);
   const animation = useRef(new Animated.Value(0)).current;
   const timelineRef = useRef<ScrollView>(null);
@@ -138,6 +140,13 @@ export default function CalendarScreen() {
   const timedBlocks = makeTimedBlocks(todayEntries, selectedDay);
   const isSelectedDayToday = selectedKey === todayKey;
   const weekdayName = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(selectedDay);
+
+  useEffect(() => {
+    const configuredDay = startOfDay(simulatedDate);
+    setVisibleMonth(new Date(configuredDay.getFullYear(), configuredDay.getMonth(), 1));
+    setSelectedDay(configuredDay);
+    setNow(new Date(simulatedDate));
+  }, [simulatedDate]);
 
   const loadVisibleEntries = useCallback(async () => {
     const gridStart = days[0];
@@ -157,11 +166,6 @@ export default function CalendarScreen() {
   useFocusEffect(useCallback(() => {
     void loadVisibleEntries();
   }, [loadVisibleEntries]));
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60 * 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     if (mode !== 'day') return;
@@ -207,7 +211,7 @@ export default function CalendarScreen() {
   }
 
   function showToday() {
-    const today = startOfDay(new Date());
+    const today = startOfDay(simulatedDate);
     setSelectedDay(today);
     setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
   }
@@ -266,7 +270,7 @@ export default function CalendarScreen() {
                     <Pressable
                       key={dayKey}
                       onPress={() => openDay(day)}
-                      style={[styles.dayCell, { width: dayCellWidth }, isSelected && styles.selectedDayCell]}
+                      style={[styles.dayCell, { width: dayCellWidth }, isSelected && !isToday && styles.selectedDayCell]}
                       accessibilityRole="button"
                       accessibilityLabel={`${formatLongDate(day)}, ${dayEntries.length} plans`}
                     >

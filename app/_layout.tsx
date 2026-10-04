@@ -50,8 +50,7 @@ function AuthGate() {
         return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator /></View>;
     }
 
-    const app = (
-        <MissionProvider>
+    const stack = (
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
@@ -61,14 +60,15 @@ function AuthGate() {
             <Stack.Screen name="settings" options={{ headerShown: false }} />
             <Stack.Screen name="calendar/new" options={{ presentation: 'modal', headerShown: false }} />
           </Stack>
-        </MissionProvider>
     );
 
     const inAuthGroup = segments[0] === '(auth)' || String(segments[0]) === 'auth';
     if (!session && !inAuthGroup) return <View style={{ flex: 1 }} />;
     if (session && inAuthGroup) return <View style={{ flex: 1 }} />;
 
-    return session ? <ProfileProvider>{app}</ProfileProvider> : app;
+    return session
+        ? <ProfileProvider><MissionProvider>{stack}</MissionProvider></ProfileProvider>
+        : stack;
 }
 
 export default function RootLayout() {

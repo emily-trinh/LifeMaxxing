@@ -54,6 +54,7 @@ function mapSupabaseError(message: string, error: { message: string }): Error {
 }
 
 function toAppEvent(event: Event): AppEvent {
+  const timeKnown = hasKnownEventTime(event);
   return {
     id: event.id,
     source: 'google_search_events',
@@ -61,7 +62,7 @@ function toAppEvent(event: Event): AppEvent {
     description: event.description,
     startTime: event.start_time,
     endTime: event.end_time || null,
-    timeKnown: true,
+    timeKnown,
     venueName: null,
     address: event.address,
     latitude: event.latitude,
@@ -73,6 +74,11 @@ function toAppEvent(event: Event): AppEvent {
     isFree: event.is_free,
     priceText: event.price > 0 ? `$${event.price}` : null,
   };
+}
+
+function hasKnownEventTime(event: Event): boolean {
+  return !/^\d{4}-\d{2}-\d{2}$/.test(event.start_time)
+    && !/^\d{4}-\d{2}-\d{2}$/.test(event.end_time);
 }
 
 export async function getEntries(rangeStart: Date, rangeEnd: Date): Promise<CalendarEntry[]> {
@@ -218,6 +224,7 @@ export function addEventToCalendar(event: AppEvent, status: 'going' | 'booked'):
 export function addEventToCalendar(event: Event, status: 'going' | 'booked'): Promise<void>;
 export async function addEventToCalendar(eventInput: AppEvent | Event, status: 'going' | 'booked'): Promise<void> {
   const event = 'start_time' in eventInput ? toAppEvent(eventInput) : eventInput;
+  if (event.timeKnown === false) return;
   const start = event.startTime ? new Date(event.startTime) : null;
   if (!start || !Number.isFinite(start.getTime())) throw new Error('This event has no valid start time.');
   const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
@@ -253,7 +260,7 @@ export async function addEventToCalendar(eventInput: AppEvent | Event, status: '
     title: event.title,
     starts_at: start.toISOString(),
     ends_at: end.toISOString(),
-    all_day: event.timeKnown === false,
+    all_day: false,
     kind: 'booking',
     status,
     source_event_id: event.id,

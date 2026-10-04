@@ -6,6 +6,7 @@ export interface Profile {
   username: string;
   avatar_url: string | null;
   current_streak: number;
+  last_completed_week: string | null;
   preferences: Preferences;
 }
 

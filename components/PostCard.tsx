@@ -1,18 +1,37 @@
 import { Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useEffect, useState } from 'react';
 import { colors, fonts, spacing, type } from '../constants/theme';
-import { getEvent, getProfile } from '../lib/mockData';
 import { useProfile } from '../lib/ProfileContext';
-import type { Post } from '../types';
+import { getEvent as getDatabaseEvent } from '../services/events';
+import type { Event, Post } from '../types';
 import { Avatar } from './Avatar';
 
 export function PostCard({ post }: { post: Post }) {
 	const { profile: currentProfile, friends } = useProfile();
 	const profile = post.user_id === currentProfile.id
 		? currentProfile
-		: friends.find((friend) => friend.id === post.user_id) ?? getProfile(post.user_id);
-	const event = getEvent(post.event_id);
+		: friends.find((friend) => friend.id === post.user_id);
+	const [event, setEvent] = useState<Event | null>(null);
 	const { width } = useWindowDimensions();
 	const username = profile?.username ?? 'A community member';
+
+	useEffect(() => {
+		let mounted = true;
+		if (!post.event_id) {
+			setEvent(null);
+			return;
+		}
+		void getDatabaseEvent(post.event_id)
+			.then((loadedEvent) => {
+				if (mounted) setEvent(loadedEvent);
+			})
+			.catch((error: unknown) => {
+				console.error('Unable to load post event:', error);
+			});
+		return () => {
+			mounted = false;
+		};
+	}, [post.event_id]);
 
 	return (
 		<View style={styles.card}>
