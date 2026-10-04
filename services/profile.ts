@@ -94,6 +94,32 @@ export async function getProfile(): Promise<Profile> {
   };
 }
 
+export async function getProfileById(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url, current_streak, last_completed_week')
+    .eq('id', userId)
+    .maybeSingle<ProfileRow>();
+
+  if (error) throw new Error(`Unable to load the post author: ${error.message}`);
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    username: data.username ?? 'User',
+    avatar_url: data.avatar_url,
+    current_streak: data.current_streak ?? 0,
+    last_completed_week: data.last_completed_week,
+    preferences: {
+      interests: [],
+      radius_km: 10,
+      min_price: 0,
+      max_price: 50,
+      group_mode: 'either',
+    },
+  };
+}
+
 export async function updateProfile(updates: Partial<Profile>): Promise<Profile> {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError) throw new Error(`Unable to get the signed-in user: ${userError.message}`);

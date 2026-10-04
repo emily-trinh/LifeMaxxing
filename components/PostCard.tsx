@@ -3,17 +3,37 @@ import { useEffect, useState } from 'react';
 import { colors, fonts, spacing, type } from '../constants/theme';
 import { useProfile } from '../lib/ProfileContext';
 import { getEvent as getDatabaseEvent } from '../services/events';
+import { getProfileById } from '../services/profile';
 import type { Event, Post } from '../types';
 import { Avatar } from './Avatar';
 
 export function PostCard({ post }: { post: Post }) {
 	const { profile: currentProfile, friends } = useProfile();
-	const profile = post.user_id === currentProfile.id
+	const knownProfile = post.user_id === currentProfile.id
 		? currentProfile
 		: friends.find((friend) => friend.id === post.user_id);
+	const [author, setAuthor] = useState(knownProfile);
 	const [event, setEvent] = useState<Event | null>(null);
 	const { width } = useWindowDimensions();
-	const username = profile?.username ?? 'A community member';
+	const username = author?.username ?? 'A community member';
+
+	useEffect(() => {
+		let mounted = true;
+		if (knownProfile) {
+			setAuthor(knownProfile);
+		} else {
+			void getProfileById(post.user_id)
+				.then((loadedProfile) => {
+					if (mounted) setAuthor(loadedProfile ?? undefined);
+				})
+				.catch((error: unknown) => {
+					console.error('Unable to load post author:', error);
+				});
+		}
+		return () => {
+			mounted = false;
+		};
+	}, [knownProfile, post.user_id]);
 
 	useEffect(() => {
 		let mounted = true;
@@ -28,16 +48,14 @@ export function PostCard({ post }: { post: Post }) {
 			.catch((error: unknown) => {
 				console.error('Unable to load post event:', error);
 			});
-		return () => {
-			mounted = false;
-		};
+		return () => { mounted = false; };
 	}, [post.event_id]);
 
 	return (
 		<View style={styles.card}>
 			<View style={styles.textRow}>
 				<View style={styles.header}>
-					<Avatar name={username} url={profile?.avatar_url} size={32} />
+					<Avatar name={username} url={author?.avatar_url} size={32} />
 					<View style={styles.identity}>
 						<Text style={styles.username}>{username}</Text>
 						<Text style={styles.event}>{event?.title ?? 'A recent activity'}</Text>
