@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { colors, fonts, radius, spacing } from '../constants/theme';
+import { colors, fonts, radius, spacing, type } from '../constants/theme';
 
 type PromptCardProps = { label?: string; title: string; description?: string; onPress?: () => void };
 
-export function PromptCard({ label = "THIS WEEK'S PROMPT", title, description, onPress }: PromptCardProps) {
+export function PromptCard({ label = 'your mission this week', title, description, onPress }: PromptCardProps) {
 	return (
 		<Pressable onPress={onPress} disabled={!onPress} style={styles.card}>
 			<Text style={styles.label}>{label}</Text>
@@ -14,8 +14,8 @@ export function PromptCard({ label = "THIS WEEK'S PROMPT", title, description, o
 }
 
 const styles = StyleSheet.create({
-	card: { alignSelf: 'stretch', backgroundColor: colors.card, borderRadius: radius.md, padding: spacing.md },
-	label: { color: colors.muted, fontFamily: fonts.sansMedium, fontSize: 11, letterSpacing: 0.6 },
-	title: { color: colors.text, fontFamily: fonts.sansMedium, fontSize: 23, lineHeight: 30, marginTop: spacing.sm },
-	description: { color: colors.muted, fontFamily: fonts.sans, fontSize: 14, lineHeight: 21, marginTop: spacing.sm },
+	card: { alignSelf: 'stretch', backgroundColor: colors.prompt, borderRadius: radius.lg, padding: spacing.lg },
+	label: { ...type.label, color: colors.ink, opacity: 0.7 },
+	title: { ...type.promptTitle, fontFamily: fonts.bold, fontSize: 26, lineHeight: 32, letterSpacing: -0.3, color: colors.ink, marginTop: spacing.sm },
+	description: { ...type.body, color: colors.ink, marginTop: spacing.sm },
 });

@@ -1,3 +1,15 @@
+export const categoryEmoji: Record<string, string> = {
+  Outdoors: '🥾',
+  Creative: '🎨',
+  Explore: '🧭',
+  Movement: '🧗',
+  Culture: '🏛️',
+  Community: '🌱',
+  Film: '🎬',
+  Wellness: '🧘',
+  Food: '🍝',
+};
+
 export function formatEventDate(iso: string): string {
   const date = new Date(iso);
   const dayAndDate = new Intl.DateTimeFormat('en-US', {

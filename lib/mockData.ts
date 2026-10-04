@@ -22,7 +22,7 @@ export const mockEvents: Event[] = [
   { id: 'event-10', title: 'Sunset Sketch Session', description: 'Bring any sketchbook and draw the waterfront with a local artist.', category: 'Creative', price: 0, is_free: true, start_time: '2026-10-11T17:30:00Z', end_time: '2026-10-11T19:00:00Z', address: 'Pier 7', latitude: 37.7989, longitude: -122.3975, capacity: 18, image_url: image('photo-1513364776144-60967b0f800f'), is_group_activity: false, is_outdoor: true },
 ];
 
-export const mockWeeklyPrompt: WeeklyPrompt = { id: 'prompt-1', title: 'Change your usual view', description: 'Try an activity somewhere you have never spent a Saturday morning.', category: 'Explore', event_id: 'event-3', week_start: '2026-10-05' };
+export const mockWeeklyPrompt: WeeklyPrompt = { id: 'prompt-1', title: 'Change your usual view', description: 'Try an activity somewhere you have never spent a Saturday morning.', category: 'Explore', event_id: 'event-2', week_start: '2026-10-05' };
 
 export const mockPosts: Post[] = [
   { id: 'post-1', user_id: 'user-2', event_id: 'event-1', media_url: image('photo-1500534623283-312aade485b7'), media_type: 'image', caption: 'A much better start to the weekend.', created_at: '2026-10-02T09:14:00Z' },
