@@ -14,7 +14,7 @@ import type { AttendanceStatus } from '../../services/eventService';
 import { useMission } from '../../lib/MissionContext';
 
 export default function PromptScreen() {
-  const { activeEvent, activeEventId, setActiveEventId } = useMission();
+  const { activeEvent, activeEventId, setActiveEventId, recommendation, recommendationLoading, recommendationError } = useMission();
   const [attendance, setAttendance] = useState<AttendanceStatus | 'loading'>('loading');
   const [booking, setBooking] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
@@ -109,6 +109,10 @@ export default function PromptScreen() {
         <View style={styles.missionText}>
           <Text style={styles.eventTitle}>{event.title}</Text>
           <Text style={styles.eventDescription}>{event.description}</Text>
+          {recommendationLoading ? <Text style={styles.aiStatus}>Finding your weekly activity...</Text> : null}
+          {recommendationError ? <Text style={styles.aiError}>{recommendationError}</Text> : null}
+          {recommendation?.eventId === null ? <Text style={styles.aiError}>{recommendation.reason}</Text> : null}
+          {recommendation?.eventId === event.id ? <Text style={styles.reason}>Why this was picked: {recommendation.reason}</Text> : null}
         </View>
         {event.image_url ? <Image source={{ uri: event.image_url }} style={[styles.image, { width, height: width * 0.75 }]} resizeMode="cover" /> : null}
         <View style={styles.textSection}>
@@ -176,6 +180,9 @@ const styles = StyleSheet.create({
   missionText: { paddingHorizontal: spacing.md, marginBottom: spacing.md },
   eventTitle: { color: colors.ink, fontFamily: fonts.bold, fontSize: 26, lineHeight: 32, letterSpacing: -0.3 },
   eventDescription: { ...type.body, color: colors.muted, marginTop: spacing.sm },
+  aiStatus: { ...type.meta, color: colors.muted, marginTop: spacing.md },
+  aiError: { ...type.meta, color: colors.danger, marginTop: spacing.md },
+  reason: { ...type.body, color: colors.ink, marginTop: spacing.md },
   image: { borderRadius: radius.sm, backgroundColor: colors.surface },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
   details: { marginTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
