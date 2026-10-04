@@ -8,7 +8,6 @@ import { formatEventDate } from '../../lib/format';
 import { Avatar } from '../../components/Avatar';
 import { Chip } from '../../components/Chip';
 import { colors, fonts, radius, spacing, type } from '../../constants/theme';
-import { getFriends } from '../../lib/mockData';
 import { useProfile } from '../../lib/ProfileContext';
 import { getMyActivities } from '../../services/eventService';
 import { getPostsByUser } from '../../services/postService';
@@ -20,7 +19,7 @@ const GRID_GAP = 1;
 export default function ProfileScreen() {
 	const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
 	const { width } = useWindowDimensions();
-	const { profile } = useProfile();
+	const { profile, friends, friendsError } = useProfile();
 	const [userPosts, setUserPosts] = useState<Post[]>([]);
 	const [activities, setActivities] = useState<{ event: Event; status: 'going' | 'booked' }[]>([]);
 	const friends = getFriends();
@@ -36,7 +35,7 @@ export default function ProfileScreen() {
 			? 'Group only'
 			: 'Solo or group';
 	useFocusEffect(useCallback(() => {
-		setUserPosts(getPostsByUser(profile.id));
+		void getPostsByUser(profile.id).then(setUserPosts).catch((error: unknown) => console.error(error));
 		void getMyActivities().then(setActivities);
 	}, [profile.id]));
 
@@ -108,6 +107,8 @@ export default function ProfileScreen() {
 								</View>
 							))}
 						</View>
+					) : friendsError ? (
+						<Text style={styles.empty}>{friendsError}</Text>
 					) : (
 						<Text style={styles.empty}>No posts yet. Go do something worth posting.</Text>
 					)
