@@ -1,1 +1,3 @@
--- Previously applied remotely; retained locally for migration history.
+update public.events
+set category = 'fitness'
+where category = 'athletic';

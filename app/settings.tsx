@@ -1,13 +1,15 @@
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { colors, fonts, radius, spacing, type } from '../constants/theme';
 import { useProfile } from '../lib/ProfileContext';
+import { useMission } from '../lib/MissionContext';
 import { signOut } from '../services/authService';
 import type { GroupMode } from '../types';
 
@@ -15,7 +17,7 @@ import type { GroupMode } from '../types';
 
 
 
-const interestOptions = ['hiking', 'food', 'cycling', 'music', 'art', 'cooking', 'wellness', 'books', 'film', 'climbing', 'gardening', 'photography', 'travel', 'volunteering', 'dancing', 'games'];
+const interestOptions = ['fitness', 'art', 'food', 'outdoors', 'music', 'wellness', 'culture', 'social', 'games', 'volunteering', 'travel'];
 const groupOptions: { label: string; value: GroupMode }[] = [
 	{ label: 'Solo', value: 'solo' },
 	{ label: 'Group', value: 'group' },
@@ -24,6 +26,8 @@ const groupOptions: { label: string; value: GroupMode }[] = [
 
 export default function SettingsScreen() {
 	const { profile, updateProfile } = useProfile();
+	const { simulatedDate, setSimulatedDate } = useMission();
+	const [showDatePicker, setShowDatePicker] = useState(false);
 	const [radiusKm, setRadiusKm] = useState(profile.preferences.radius_km);
 	const [minPrice, setMinPrice] = useState(profile.preferences.min_price);
 	const [maxPrice, setMaxPrice] = useState(profile.preferences.max_price);
@@ -62,6 +66,11 @@ export default function SettingsScreen() {
 		} catch (error) {
 			Alert.alert("Couldn't log out", error instanceof Error ? error.message : 'Please try again.');
 		}
+	}
+
+	function handleDateChange(_event: unknown, pickedDate: Date) {
+		setSimulatedDate(pickedDate);
+		if (Platform.OS === 'android') setShowDatePicker(false);
 	}
 
 	return (
@@ -161,6 +170,33 @@ export default function SettingsScreen() {
 
                 <View style={styles.devSection}>
                     <Text style={styles.sectionLabel}>Developer</Text>
+                    <Text style={styles.devDescription}>Simulate a future date to test the next weekly mission.</Text>
+                    <View style={styles.devButton}>
+                        <Button
+                            label={`Mission date: ${simulatedDate.toLocaleDateString()}`}
+                            variant="outline"
+                            onPress={() => setShowDatePicker(true)}
+                        />
+                    </View>
+                    <View style={styles.devButton}>
+                        <Button
+                            label="Advance one week"
+                            variant="outline"
+                            onPress={() => {
+                                const nextDate = new Date(simulatedDate);
+                                nextDate.setDate(nextDate.getDate() + 7);
+                                setSimulatedDate(nextDate);
+                            }}
+                        />
+                    </View>
+                    {showDatePicker ? (
+                        <DateTimePicker
+                            value={simulatedDate}
+                            mode="date"
+                            onValueChange={handleDateChange}
+                            onDismiss={() => setShowDatePicker(false)}
+                        />
+                    ) : null}
                     <View style={styles.devButton}>
                         <Button label="Open AI test" variant="outline" onPress={() => router.push('/ai-test')} />
                     </View>
@@ -205,6 +241,7 @@ const styles = StyleSheet.create({
     selectedGroupLabel: { color: colors.bg },
     saveButton: { paddingTop: spacing.xs },
     devSection: { marginTop: spacing.xl, paddingTop: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border },
+    devDescription: { ...type.meta, marginTop: spacing.sm },
     devButton: { marginTop: spacing.md },
     logoutSection: { marginTop: spacing.xl },
     logoutDivider: { height: 1, backgroundColor: colors.border },

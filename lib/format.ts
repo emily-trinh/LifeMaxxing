@@ -1,17 +1,29 @@
 export const categoryEmoji: Record<string, string> = {
+  Fitness: '🏃',
+  fitness: '🏃',
+  Art: '🎨',
+  art: '🎨',
+  Food: '🍝',
+  food: '🍝',
+  Social: '🫶',
+  social: '🫶',
+  Games: '🎲',
+  games: '🎲',
   Outdoors: '🥾',
+  outdoors: '🥾',
   Creative: '🎨',
   Explore: '🧭',
   Movement: '🧗',
   Culture: '🏛️',
+  culture: '🏛️',
   Community: '🌱',
+  volunteering: '🌱',
   Film: '🎬',
   Wellness: '🧘',
-  Food: '🍝',
 };
 
 // Real device location will replace this reference point later.
-export const REFERENCE_POINT = { latitude: 37.7749, longitude: -122.4194 };
+export const REFERENCE_POINT = { latitude: 49.2781, longitude: -122.9199 };
 
 export function distanceKm(latitude: number, longitude: number): number {
   const earthRadiusKm = 6371;
@@ -31,7 +43,8 @@ export function formatDistance(km: number): string {
   return `${distance} km away`;
 }
 
-export function formatEventDate(iso: string): string {
+export function formatEventDate(iso: string | null): string {
+  if (!iso) return 'Open year-round';
   const date = new Date(iso);
   const dayAndDate = new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
@@ -46,6 +59,14 @@ export function formatEventDate(iso: string): string {
   return `${dayAndDate} · ${time}`;
 }
 
+export function formatEventTime(iso: string | null): string {
+  if (!iso) return 'Open year-round';
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(iso));
+}
+
 export function formatHourLabel(hour: number): string {
   const date = new Date(2000, 0, 1, hour);
   return new Intl.DateTimeFormat('en-US', { hour: 'numeric' }).format(date);
@@ -57,9 +78,16 @@ export function formatTimeRange(startsAt: Date | string, endsAt: Date | string):
 }
 
 export function formatLongDate(date: Date | string): string {
+  const parsedDate = date instanceof Date
+    ? date
+    : /^\d{4}-\d{2}-\d{2}$/.test(date)
+      ? new Date(`${date}T12:00:00`)
+      : new Date(date);
+  if (!Number.isFinite(parsedDate.getTime())) return 'Date unavailable';
+
   return new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     month: 'short',
     day: 'numeric',
-  }).format(typeof date === 'string' ? new Date(`${date}T12:00:00`) : date);
+  }).format(parsedDate);
 }

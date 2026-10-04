@@ -7,7 +7,7 @@ import type { CandidateEvent, EventRecommendation, UserPreferences } from '../ty
 
 const preferences: UserPreferences = {
   interests: ['art', 'fitness', 'outdoors'],
-  likes: ['creative activities', 'group activities'],
+  likes: ['art activities', 'group activities'],
   dislikes: ['running'],
   radiusKm: 10,
   minPrice: 0,
@@ -18,7 +18,7 @@ const preferences: UserPreferences = {
 const events: CandidateEvent[] = [
   { id: 'test-1', title: 'Sunset Beach Volleyball', description: 'A casual group game for beginners.', category: 'fitness', price: 0, isFree: true, distanceKm: 3.2, groupMode: 'group' },
   { id: 'test-2', title: 'Beginner Pottery Workshop', description: 'Make a small planter while meeting other first-timers.', category: 'art', price: 24, isFree: false, distanceKm: 5.1, groupMode: 'group' },
-  { id: 'test-3', title: 'Riverfront 5K Run', description: 'A timed community running event.', category: 'running', price: 10, isFree: false, distanceKm: 2.8, groupMode: 'group' },
+  { id: 'test-3', title: 'Riverfront 5K Run', description: 'A timed community running event.', category: 'fitness', price: 10, isFree: false, distanceKm: 2.8, groupMode: 'group' },
   { id: 'test-4', title: 'Chef\'s Tasting Menu', description: 'A six-course dinner in a private dining room.', category: 'food', price: 95, isFree: false, distanceKm: 4.6, groupMode: 'group' },
   { id: 'test-5', title: 'Quiet Gallery Walk', description: 'A self-guided afternoon viewing local art.', category: 'art', price: 0, isFree: true, distanceKm: 1.9, groupMode: 'solo' },
 ];

@@ -6,6 +6,7 @@ export interface Profile {
   username: string;
   avatar_url: string | null;
   current_streak: number;
+  last_completed_week: string | null;
   preferences: Preferences;
 }
 
@@ -24,8 +25,8 @@ export interface Event {
   category: string;
   price: number;
   is_free: boolean;
-  start_time: string;
-  end_time: string;
+  start_time: string | null;
+  end_time: string | null;
   address: string;
   latitude: number;
   longitude: number;

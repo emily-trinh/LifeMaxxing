@@ -7,14 +7,15 @@ import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { colors, fonts, radius, spacing, type } from '../../constants/theme';
 import { categoryEmoji, distanceKm, formatDistance, formatEventDate } from '../../lib/format';
-import { getEvent } from '../../lib/mockData';
+import { getEvent } from '../../services/events';
 import { getAttendanceStatus, rsvpToEvent } from '../../services/eventService';
 import { addEventToCalendar, getEntryBySourceEventId } from '../../services/calendarService';
 import type { AttendanceStatus } from '../../services/eventService';
 
 export default function EventDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const event = getEvent(id);
+  const [event, setEvent] = useState<Awaited<ReturnType<typeof getEvent>>>(null);
+  const [eventError, setEventError] = useState<string | null>(null);
   const { width } = useWindowDimensions();
   const [attendance, setAttendance] = useState<AttendanceStatus | 'loading'>('loading');
   const [submitting, setSubmitting] = useState(false);
@@ -22,16 +23,20 @@ export default function EventDetailsScreen() {
   useEffect(() => {
     let active = true;
     setAttendance('loading');
+    setEventError(null);
 
     async function loadAttendance() {
-      if (!event) {
+      const loadedEvent = await getEvent(id);
+      if (!active) return;
+      setEvent(loadedEvent);
+      if (!loadedEvent) {
         setAttendance('none');
         return;
       }
       try {
-        const calendarEntry = await getEntryBySourceEventId(event.id);
+        const calendarEntry = await getEntryBySourceEventId(loadedEvent.id);
         if (!active) return;
-        if (!event.is_free) {
+        if (!loadedEvent.is_free) {
           setAttendance(calendarEntry?.status === 'booked' ? 'booked' : 'none');
           return;
         }
@@ -39,25 +44,30 @@ export default function EventDetailsScreen() {
           setAttendance('going');
           return;
         }
-        const status = await getAttendanceStatus(event.id);
+        const status = await getAttendanceStatus(loadedEvent.id);
         if (!active) return;
         setAttendance(status);
-        if (event.is_free && status === 'going') {
-          void addEventToCalendar(event, 'going').catch((error: unknown) => {
+        if (loadedEvent.is_free && status === 'going') {
+          void addEventToCalendar(loadedEvent, 'going').catch((error: unknown) => {
             Alert.alert("Couldn't update your calendar", error instanceof Error ? error.message : 'Please try again.');
           });
         }
       } catch (error) {
         if (active) {
           setAttendance('none');
-          Alert.alert('Unable to load event', error instanceof Error ? error.message : 'Please try again.');
+          setEventError(error instanceof Error ? error.message : 'Please try again.');
         }
       }
     }
 
-    void loadAttendance();
+    void loadAttendance().catch((error: unknown) => {
+      if (active) {
+        setEventError(error instanceof Error ? error.message : 'Unable to load event.');
+        setAttendance('none');
+      }
+    });
     return () => { active = false; };
-  }, [event]);
+  }, [id]);
 
   async function joinOrBook() {
     if (!event || submitting) return;
@@ -90,7 +100,7 @@ export default function EventDetailsScreen() {
         <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="chevron-back" size={24} color={colors.ink} />
         </Pressable>
-        <Text style={styles.notFound}>Event not found.</Text>
+        <Text style={styles.notFound}>{eventError ?? 'Event not found.'}</Text>
       </SafeAreaView>
     );
   }

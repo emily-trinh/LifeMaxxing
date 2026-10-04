@@ -13,7 +13,7 @@ import { getAllPosts } from '../../services/postService';
 import type { Post } from '../../types';
 
 function FeedHeader() {
-	const { activeEvent } = useMission();
+	const { activeEvent, isCompleted } = useMission();
 	const { profile } = useProfile();
 
 	return (
@@ -28,6 +28,7 @@ function FeedHeader() {
 			<PromptCard
 				title={activeEvent.title}
 				description={activeEvent.description}
+				completed={isCompleted}
 				onPress={() => router.push('/prompt')}
 			/>
 		</View>

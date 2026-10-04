@@ -1,1 +1,2 @@
--- Previously applied remotely; retained locally for migration history.
+alter table public.profiles
+add column if not exists last_completed_week date;
