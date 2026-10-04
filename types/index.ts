@@ -31,6 +31,7 @@ export interface Event {
   longitude: number;
   capacity: number;
   image_url: string | null;
+  ticket_url?: string | null;
   is_group_activity?: boolean;
   is_outdoor?: boolean;
 }

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
@@ -8,7 +8,8 @@ import { Confetti } from '../../components/Confetti';
 import { colors, fonts, radius, spacing, type } from '../../constants/theme';
 import { mockEvents } from '../../lib/mockData';
 import { categoryEmoji, formatEventDate } from '../../lib/format';
-import { bookEvent, getAttendanceStatus, rsvpToEvent } from '../../services/eventService';
+import { getAttendanceStatus, rsvpToEvent } from '../../services/eventService';
+import { addEventToCalendar, getEntryBySourceEventId } from '../../services/calendarService';
 import type { AttendanceStatus } from '../../services/eventService';
 import { useMission } from '../../lib/MissionContext';
 
@@ -33,16 +34,39 @@ export default function PromptScreen() {
 
     async function loadAttendance() {
       try {
+        const calendarEntry = await getEntryBySourceEventId(event.id);
+        if (!isActive) return;
+        if (!event.is_free) {
+          setAttendance(calendarEntry?.status === 'booked' ? 'booked' : 'none');
+          return;
+        }
+        if (calendarEntry?.status === 'going') {
+          setAttendance('going');
+          return;
+        }
         const status = await getAttendanceStatus(event.id);
         if (!isActive) return;
         if (event.is_free && status === 'none') {
           await rsvpToEvent(event.id);
-          if (isActive) setAttendance('going');
+          if (isActive) {
+            setAttendance('going');
+            void addEventToCalendar(event, 'going').catch((error: unknown) => {
+              Alert.alert("Couldn't update your calendar", error instanceof Error ? error.message : 'Please try again.');
+            });
+          }
           return;
         }
         setAttendance(status);
-      } catch {
-        if (isActive) setAttendance('none');
+        if (event.is_free && status === 'going') {
+          void addEventToCalendar(event, 'going').catch((error: unknown) => {
+            Alert.alert("Couldn't update your calendar", error instanceof Error ? error.message : 'Please try again.');
+          });
+        }
+      } catch (error) {
+        if (isActive) {
+          setAttendance('none');
+          Alert.alert('Unable to load activity', error instanceof Error ? error.message : 'Please try again.');
+        }
       }
     }
 
@@ -54,8 +78,10 @@ export default function PromptScreen() {
     if (booking) return;
     setBooking(true);
     try {
-      await bookEvent(event.id);
+      await addEventToCalendar(event, 'booked');
       setAttendance('booked');
+    } catch (error) {
+      Alert.alert("Couldn't book", error instanceof Error ? error.message : 'Please try again.');
     } finally {
       setBooking(false);
     }
@@ -98,9 +124,12 @@ export default function PromptScreen() {
             {attendance === 'booked' ? <AttendanceRow label="Booked 🎟️" /> : null}
             {!event.is_free && attendance === 'none' ? (
               <>
-                <Button label={booking ? 'Booking...' : `Book · $${event.price}`} onPress={bookCurrentEvent} disabled={booking} />
+                <Button
+                  label={booking ? 'Booking...' : Number.isFinite(event.price) && event.price > 0 ? `Book it · $${event.price}` : 'Book it'}
+                  onPress={bookCurrentEvent}
+                  disabled={booking}
+                />
                 <Button label="See a free event instead" onPress={chooseFreeActivity} variant="outline" />
-                <Text style={styles.bookingNote}>Booking confirms your spot and adds it to your calendar.</Text>
               </>
             ) : null}
             {attendance === 'going' || attendance === 'booked' ? (
@@ -159,5 +188,4 @@ const styles = StyleSheet.create({
   attendanceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
   statusIcon: { ...type.icon, color: colors.accent, fontFamily: fonts.bold },
   statusLabel: { ...type.status },
-  bookingNote: { ...type.meta, textAlign: 'center', marginTop: spacing.xs },
 });

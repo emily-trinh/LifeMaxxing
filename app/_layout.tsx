@@ -59,6 +59,7 @@ function AuthGate() {
             <Stack.Screen name="post/feed" options={{ headerShown: false }} />
             <Stack.Screen name="event/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />
+            <Stack.Screen name="calendar/new" options={{ presentation: 'modal', headerShown: false }} />
           </Stack>
         </MissionProvider>
     );

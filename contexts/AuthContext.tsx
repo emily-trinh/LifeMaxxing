@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { JwtPayload, Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { signOut as signOutUser } from '../services/authService';
+import { clearCalendarState } from '../services/calendarService';
 
 interface AuthContextType {
     session: Session | null;
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, session) => {
+                if (!session) clearCalendarState();
                 setSession(session);
                 setUser(session?.user ?? null);
                 setLoading(false);

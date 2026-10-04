@@ -45,3 +45,21 @@ export function formatEventDate(iso: string): string {
 
   return `${dayAndDate} · ${time}`;
 }
+
+export function formatHourLabel(hour: number): string {
+  const date = new Date(2000, 0, 1, hour);
+  return new Intl.DateTimeFormat('en-US', { hour: 'numeric' }).format(date);
+}
+
+export function formatTimeRange(startsAt: Date | string, endsAt: Date | string): string {
+  const formatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' });
+  return `${formatter.format(new Date(startsAt))} to ${formatter.format(new Date(endsAt))}`;
+}
+
+export function formatLongDate(date: Date | string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  }).format(typeof date === 'string' ? new Date(`${date}T12:00:00`) : date);
+}

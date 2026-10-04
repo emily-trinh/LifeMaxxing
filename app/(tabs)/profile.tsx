@@ -5,15 +5,17 @@ import { useCallback, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Avatar } from '../../components/Avatar';
+import { BookingSheet } from '../../components/BookingSheet';
 import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { colors, fonts, radius, spacing, type } from '../../constants/theme';
 import { useProfile } from '../../lib/ProfileContext';
-import { formatEventDate } from '../../lib/format';
+import { formatLongDate, formatTimeRange } from '../../lib/format';
+import { getMyBookings } from '../../services/calendarService';
 import { getFriends, removeFriend } from '../../services/friendService';
-import { getMyActivities } from '../../services/eventService';
 import { getPostsByUser } from '../../services/postService';
-import type { Event, Post, Profile } from '../../types';
+import type { Post, Profile } from '../../types';
+import type { CalendarEntry } from '../../types/activity';
 
 type ProfileTab = 'posts' | 'activities' | 'friends';
 const GRID_GAP = 1;
@@ -23,7 +25,9 @@ export default function ProfileScreen() {
 	const { width } = useWindowDimensions();
 	const { profile } = useProfile();
 	const [userPosts, setUserPosts] = useState<Post[]>([]);
-	const [activities, setActivities] = useState<{ event: Event; status: 'going' | 'booked' }[]>([]);
+	const [bookings, setBookings] = useState<CalendarEntry[]>([]);
+	const [loadingBookings, setLoadingBookings] = useState(false);
+	const [selectedBooking, setSelectedBooking] = useState<CalendarEntry | null>(null);
 	const [friends, setFriends] = useState<Profile[]>([]);
 	const [loadingFriends, setLoadingFriends] = useState(false);
 	const thumbnailSize = Math.floor((width - GRID_GAP * 2) / 3);
@@ -40,9 +44,22 @@ export default function ProfileScreen() {
 	useFocusEffect(useCallback(() => {
 		let mounted = true;
 		setLoadingFriends(true);
+		setLoadingBookings(true);
 
 		void getPostsByUser(profile.id).then(setUserPosts).catch((error: unknown) => console.error(error));
-		void getMyActivities().then(setActivities);
+		void getMyBookings()
+			.then((nextBookings) => {
+				if (mounted) setBookings(nextBookings);
+			})
+			.catch((error: unknown) => {
+				if (mounted) {
+					setBookings([]);
+					Alert.alert('Unable to load activities', error instanceof Error ? error.message : 'Please try again.');
+				}
+			})
+			.finally(() => {
+				if (mounted) setLoadingBookings(false);
+			});
 		void getFriends(profile.id)
 			.then((nextFriends) => {
 				if (mounted) setFriends(nextFriends);
@@ -59,6 +76,16 @@ export default function ProfileScreen() {
 			mounted = false;
 		};
 	}, [profile.id]));
+
+	const now = Date.now();
+	const upcomingBookings = bookings.filter((entry) => new Date(entry.endsAt).getTime() > now);
+	const pastBookings = bookings.filter((entry) => new Date(entry.endsAt).getTime() <= now);
+
+	function refreshBookings() {
+		void getMyBookings()
+			.then(setBookings)
+			.catch((error: unknown) => Alert.alert('Unable to refresh activities', error instanceof Error ? error.message : 'Please try again.'));
+	}
 
 	async function handleRemoveFriend(friend: Profile) {
 		Alert.alert('Remove friend?', `${friend.username} won't be notified.`, [
@@ -152,21 +179,26 @@ export default function ProfileScreen() {
 						<Text style={styles.empty}>No posts yet. Go do something worth posting.</Text>
 					)
 				) : activeTab === 'activities' ? (
-					activities.length ? (
+					loadingBookings ? (
+						<Text style={styles.empty}>Loading activities...</Text>
+					) : bookings.length ? (
 						<View>
-							{activities.map(({ event, status }, index) => (
-								<View key={event.id}>
-									<Pressable onPress={() => router.push({ pathname: '/event/[id]', params: { id: event.id } })} style={styles.activityRow}>
-										{event.image_url ? <Image source={{ uri: event.image_url }} style={styles.activityImage} resizeMode="cover" /> : <View style={styles.activityImage} />}
-										<View style={styles.activityCopy}>
-											<Text style={styles.activityTitle} numberOfLines={1}>{event.title}</Text>
-											<Text style={styles.activityMeta} numberOfLines={2}>{formatEventDate(event.start_time)} · {event.address}</Text>
-											<Text style={styles.activityStatus}>{status === 'booked' ? 'Booked 🎟️' : "You're in 🎉"}</Text>
-										</View>
-									</Pressable>
-									{index < activities.length - 1 ? <View style={styles.friendDivider} /> : null}
+							{upcomingBookings.length ? (
+								<View>
+									<Text style={styles.activitySectionLabel}>Upcoming</Text>
+									{upcomingBookings.map((entry, index) => (
+										<BookingRow key={entry.id} entry={entry} last={index === upcomingBookings.length - 1} onPress={() => setSelectedBooking(entry)} />
+									))}
 								</View>
-							))}
+							) : null}
+							{pastBookings.length ? (
+								<View>
+									<Text style={styles.activitySectionLabel}>Past</Text>
+									{pastBookings.map((entry, index) => (
+										<BookingRow key={entry.id} entry={entry} last={index === pastBookings.length - 1} onPress={() => setSelectedBooking(entry)} />
+									))}
+								</View>
+							) : null}
 						</View>
 					) : (
 						<Text style={styles.empty}>Nothing booked yet. Check out Explore.</Text>
@@ -207,7 +239,38 @@ export default function ProfileScreen() {
 					</View>
 				)}
 			</ScrollView>
+			<BookingSheet
+				entry={selectedBooking}
+				onClose={() => setSelectedBooking(null)}
+				onRemoved={refreshBookings}
+			/>
 		</SafeAreaView>
+	);
+}
+
+function BookingRow({ entry, last, onPress }: { entry: CalendarEntry; last: boolean; onPress: () => void }) {
+	const venue = entry.event?.venueName || entry.event?.address;
+	const time = entry.allDay ? 'All day' : formatTimeRange(entry.startsAt, entry.endsAt);
+	const subtitle = [formatLongDate(entry.startsAt), time, venue].filter(Boolean).join(' · ');
+
+	return (
+		<View>
+			<Pressable onPress={onPress} style={styles.activityRow} accessibilityRole="button">
+				{entry.event?.imageUrl ? (
+					<Image source={{ uri: entry.event.imageUrl }} style={styles.activityImage} resizeMode="cover" />
+				) : (
+					<View style={[styles.activityImage, styles.activityImagePlaceholder]}>
+						<Ionicons name="calendar-outline" size={24} color={colors.muted} />
+					</View>
+				)}
+				<View style={styles.activityCopy}>
+					<Text style={styles.activityTitle} numberOfLines={1}>{entry.title}</Text>
+					<Text style={styles.activityMeta} numberOfLines={1}>{subtitle}</Text>
+					<Text style={styles.activityStatus}>{entry.status === 'booked' ? 'Booked 🎟️' : "You're in 🎉"}</Text>
+				</View>
+			</Pressable>
+			{!last ? <View style={styles.friendDivider} /> : null}
+		</View>
 	);
 }
 
@@ -260,9 +323,11 @@ const styles = StyleSheet.create({
 	removeButton: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingVertical: 6, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
 	removeButtonText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
 	activityRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
-	activityImage: { width: spacing.xl * 2 + spacing.sm, height: spacing.xl * 2 + spacing.sm, borderRadius: radius.sm, backgroundColor: colors.surface },
+	activityImage: { width: 72, height: 72, borderRadius: radius.sm, backgroundColor: colors.surface },
+	activityImagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
 	activityCopy: { flex: 1, flexShrink: 1 },
 	activityTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 16 },
-	activityMeta: { ...type.label, marginTop: spacing.xs },
+	activityMeta: { ...type.label, color: colors.muted, marginTop: spacing.xs },
 	activityStatus: { color: colors.accent, fontFamily: fonts.medium, fontSize: 13, marginTop: spacing.xs },
+	activitySectionLabel: { ...type.label, paddingHorizontal: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.xs },
 });

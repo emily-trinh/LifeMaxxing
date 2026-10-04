@@ -16,6 +16,7 @@ export default function TabsLayout() {
             index: focused ? 'home' : 'home-outline',
             prompt: focused ? 'sparkles' : 'sparkles-outline',
             explore: focused ? 'compass' : 'compass-outline',
+            calendar: focused ? 'calendar' : 'calendar-outline',
             profile: focused ? 'person' : 'person-outline',
           } as const;
           return <Ionicons name={icons[route.name as keyof typeof icons]} color={color} size={size} />;
@@ -24,6 +25,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: 'Home' }} />
       <Tabs.Screen name="prompt" options={{ title: 'Activity' }} />
       <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
+      <Tabs.Screen name="calendar" options={{ title: 'Calendar' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
     </Tabs>
   );

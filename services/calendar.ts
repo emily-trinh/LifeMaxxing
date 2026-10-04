@@ -1,5 +1,13 @@
-import type { Event } from '../types';
-
-export async function addEventToCalendar(_event: Event): Promise<void> {
-  throw new Error('TODO: Add Expo Calendar integration.');
-}
+export {
+  addEventToCalendar,
+  clearCalendarState,
+  createPersonalEntry,
+  deleteEntry,
+  getEntry,
+  getEntryBySourceEventId,
+  getEntries,
+  getMyBookings,
+  removeEventFromCalendar,
+  updatePersonalEntry,
+} from './calendarService';
+export type { PersonalEntryPatch } from './calendarService';

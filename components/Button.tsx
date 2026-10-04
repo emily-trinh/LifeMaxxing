@@ -2,17 +2,17 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, type } from '../constants/theme';
 
-type ButtonProps = { label: string; onPress?: () => void; variant?: 'solid' | 'outline' | 'ghost'; disabled?: boolean; icon?: ReactNode };
+type ButtonProps = { label: string; onPress?: () => void; variant?: 'solid' | 'outline' | 'ghost'; disabled?: boolean; icon?: ReactNode; labelColor?: string; borderColor?: string };
 
-export function Button({ label, onPress, variant = 'solid', disabled = false, icon }: ButtonProps) {
+export function Button({ label, onPress, variant = 'solid', disabled = false, icon, labelColor, borderColor }: ButtonProps) {
   const solid = variant === 'solid';
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={({ pressed }) => [styles.button, solid && styles.solid, variant === 'outline' && styles.outline, variant === 'ghost' && styles.ghost, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
+      style={({ pressed }) => [styles.button, solid && styles.solid, variant === 'outline' && styles.outline, variant === 'ghost' && styles.ghost, borderColor ? { borderColor } : null, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
       {icon ? <View style={styles.icon}>{icon}</View> : null}
-      <Text style={[styles.label, solid && styles.solidLabel, variant === 'ghost' && styles.ghostLabel]}>{label}</Text>
+      <Text style={[styles.label, solid && styles.solidLabel, variant === 'ghost' && styles.ghostLabel, labelColor ? { color: labelColor } : null]}>{label}</Text>
     </Pressable>
   );
 }

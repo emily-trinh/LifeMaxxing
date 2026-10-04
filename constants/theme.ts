@@ -6,6 +6,7 @@ export const colors = {
   border: '#EAEAEA',
   ink: '#111111',
   accent: '#FF5A36',
+  accentSoft: '#FFE6DF',
   prompt: '#FFF4B8',
   danger: '#D92D20',
 };

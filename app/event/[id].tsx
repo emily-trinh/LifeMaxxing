@@ -1,14 +1,15 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { colors, fonts, radius, spacing, type } from '../../constants/theme';
 import { categoryEmoji, distanceKm, formatDistance, formatEventDate } from '../../lib/format';
 import { getEvent } from '../../lib/mockData';
-import { bookEvent, getAttendanceStatus, rsvpToEvent } from '../../services/eventService';
+import { getAttendanceStatus, rsvpToEvent } from '../../services/eventService';
+import { addEventToCalendar, getEntryBySourceEventId } from '../../services/calendarService';
 import type { AttendanceStatus } from '../../services/eventService';
 
 export default function EventDetailsScreen() {
@@ -28,9 +29,29 @@ export default function EventDetailsScreen() {
         return;
       }
       try {
-        setAttendance(await getAttendanceStatus(event.id));
-      } catch {
-        if (active) setAttendance('none');
+        const calendarEntry = await getEntryBySourceEventId(event.id);
+        if (!active) return;
+        if (!event.is_free) {
+          setAttendance(calendarEntry?.status === 'booked' ? 'booked' : 'none');
+          return;
+        }
+        if (calendarEntry?.status === 'going') {
+          setAttendance('going');
+          return;
+        }
+        const status = await getAttendanceStatus(event.id);
+        if (!active) return;
+        setAttendance(status);
+        if (event.is_free && status === 'going') {
+          void addEventToCalendar(event, 'going').catch((error: unknown) => {
+            Alert.alert("Couldn't update your calendar", error instanceof Error ? error.message : 'Please try again.');
+          });
+        }
+      } catch (error) {
+        if (active) {
+          setAttendance('none');
+          Alert.alert('Unable to load event', error instanceof Error ? error.message : 'Please try again.');
+        }
       }
     }
 
@@ -45,9 +66,18 @@ export default function EventDetailsScreen() {
       if (event.is_free) {
         await rsvpToEvent(event.id);
         setAttendance('going');
+        void addEventToCalendar(event, 'going').catch((error: unknown) => {
+          Alert.alert("Couldn't update your calendar", error instanceof Error ? error.message : 'Please try again.');
+        });
       } else {
-        await bookEvent(event.id);
+        await addEventToCalendar(event, 'booked');
         setAttendance('booked');
+      }
+    } catch (error) {
+      if (event.is_free) {
+        Alert.alert("Couldn't update your calendar", error instanceof Error ? error.message : 'Please try again.');
+      } else {
+        Alert.alert("Couldn't book", error instanceof Error ? error.message : 'Please try again.');
       }
     } finally {
       setSubmitting(false);
@@ -95,7 +125,7 @@ export default function EventDetailsScreen() {
             {attendance === 'booked' ? <AttendanceRow label="Booked 🎟️" /> : null}
             {attendance === 'none' ? (
               <Button
-                label={submitting ? (event.is_free ? 'Joining...' : 'Booking...') : (event.is_free ? 'Join (free)' : `Book · $${event.price}`)}
+                label={submitting ? (event.is_free ? 'Joining...' : 'Booking...') : (event.is_free ? 'Join (free)' : Number.isFinite(event.price) && event.price > 0 ? `Book it · $${event.price}` : 'Book it')}
                 onPress={joinOrBook}
                 disabled={submitting}
               />
