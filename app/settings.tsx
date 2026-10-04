@@ -10,6 +10,10 @@ import { colors, fonts, radius, spacing, type } from '../constants/theme';
 import { useProfile } from '../lib/ProfileContext';
 import type { GroupMode } from '../types';
 
+
+
+
+
 const interestOptions = ['hiking', 'food', 'cycling', 'music', 'art', 'cooking', 'wellness', 'books', 'film', 'climbing', 'gardening', 'photography', 'travel', 'volunteering', 'dancing', 'games'];
 const groupOptions: { label: string; value: GroupMode }[] = [
 	{ label: 'Solo', value: 'solo' },
@@ -140,6 +144,13 @@ export default function SettingsScreen() {
 				<View style={styles.saveButton}>
 					<Button label={saved ? 'Saved ✓' : 'Save changes'} onPress={saveChanges} disabled={unchanged || saved} />
 				</View>
+
+                <View style={styles.devSection}>
+                    <Text style={styles.sectionLabel}>Developer</Text>
+                    <View style={styles.devButton}>
+                        <Button label="Open AI test" variant="outline" onPress={() => router.push('/ai-test')} />
+                    </View>
+                </View>
 			</ScrollView>
 		</SafeAreaView>
 	);
@@ -164,4 +175,6 @@ const styles = StyleSheet.create({
 	groupLabel: { ...type.label, color: colors.text },
 	selectedGroupLabel: { color: colors.bg },
 	saveButton: { paddingTop: spacing.xs },
+    devSection: { marginTop: spacing.xl, paddingTop: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border },
+    devButton: { marginTop: spacing.md }
 });

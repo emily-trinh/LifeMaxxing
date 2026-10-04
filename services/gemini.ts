@@ -1,9 +1,18 @@
-import type { Event, WeeklyPrompt } from '../types';
+import { supabase } from '../lib/supabase';
+import type { CandidateEvent, EventRecommendation, UserPreferences } from '../types/recommendation';
 
-export async function generateWeeklyPrompt(): Promise<WeeklyPrompt> {
-  throw new Error('TODO: Connect Gemini prompt generation.');
-}
+export async function generateWeeklyActivity(
+  preferences: UserPreferences,
+  events: CandidateEvent[],
+): Promise<EventRecommendation> {
+  const { data, error } = await supabase.functions.invoke<EventRecommendation>('generate-weekly-activity', {
+    body: { preferences, events },
+  });
 
-export async function recommendEvent(_prompt: WeeklyPrompt): Promise<Event | null> {
-  throw new Error('TODO: Connect Gemini event ranking.');
+  if (error) throw new Error(`Weekly activity generation failed: ${error.message}`);
+  if (!data || typeof data.reason !== 'string' || (typeof data.eventId !== 'string' && data.eventId !== null)) {
+    throw new Error('Weekly activity generation returned an invalid response.');
+  }
+
+  return data;
 }
